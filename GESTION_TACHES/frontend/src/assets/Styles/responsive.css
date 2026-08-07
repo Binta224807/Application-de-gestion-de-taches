@@ -1,0 +1,216 @@
+/* ==================================================
+   RESPONSIVE GLOBAL
+   Task Management App
+================================================== */
+
+
+/* =========================
+   TABLETTE
+========================= */
+
+@media (max-width: 1100px) {
+
+
+    /* Layout */
+
+    .page-container {
+
+        padding: 20px !important;
+
+    }
+
+
+
+    /* Kanban */
+
+    .kanban-board {
+
+        grid-template-columns: repeat(2, 1fr) !important;
+
+        gap: 18px;
+
+    }
+
+
+
+    /* Header pages */
+
+    .kanban-header {
+
+        gap: 20px;
+
+    }
+
+
+
+    /* Dashboard */
+
+    .stats-grid {
+
+        grid-template-columns: repeat(2, 1fr) !important;
+
+    }
+
+
+}
+
+
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 768px) {
+
+
+
+    body {
+
+        overflow-x: hidden;
+
+    }
+
+
+
+    /* Layout */
+
+    .app-layout {
+
+        display: block !important;
+
+    }
+
+
+
+    .main-content {
+
+        width: 100%;
+
+    }
+
+
+
+    .page-container {
+
+        padding: 15px !important;
+
+    }
+
+
+
+    /* Navbar */
+
+    header {
+
+        padding-left: 15px !important;
+
+        padding-right: 15px !important;
+
+        gap: 15px;
+
+    }
+
+
+
+    /* Recherche */
+
+    input {
+
+        font-size: 14px;
+
+    }
+
+
+
+    /* Kanban */
+
+    .kanban-board {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+
+
+    .kanban-title {
+
+        font-size: 26px !important;
+
+    }
+
+
+
+    .new-task-btn {
+
+        width:100%;
+
+    }
+
+
+
+    /* Colonnes */
+
+    .kanban-column {
+
+        min-height: auto !important;
+
+    }
+
+
+
+    /* Dashboard */
+
+    .stats-grid {
+
+        grid-template-columns: 1fr !important;
+
+    }
+
+
+
+    /* Cartes */
+
+    .task-card {
+
+        width:100%;
+
+    }
+
+
+
+}
+
+
+
+/* =========================
+   PETITS TELEPHONES
+========================= */
+
+@media (max-width: 480px) {
+
+
+
+    .page-container {
+
+        padding:10px !important;
+
+    }
+
+
+
+    h1 {
+
+        font-size:24px !important;
+
+    }
+
+
+
+    button {
+
+        min-height:42px;
+
+    }
+
+
+}

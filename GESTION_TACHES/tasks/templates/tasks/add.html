@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+
+<!-- 🔹 titre dynamique -->
+<title>Ajouter une tâche - {{ categorie_generale|capfirst }}</title>
+
+<!-- 🔹 Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+
+<!-- 🔵 CONTAINER PRINCIPAL -->
+<div class="w-full max-w-md">
+
+    <!-- 🔴 TITRE -->
+    <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">
+        ➕ Ajouter une tâche - {{ categorie_generale|capfirst }}
+            
+    </h2>
+
+    <!-- 🔴 MESSAGE ERREUR -->
+    {% if error %}
+    <div class="text-red-500 text-center mb-4 font-medium">
+        {{ error }}
+    </div>
+    {% endif %}
+
+    <!-- 🟢 FORMULAIRE -->
+    <form method="post"
+          class="bg-white p-6 rounded-xl shadow-lg space-y-4">
+
+        {% csrf_token %}
+
+        <!-- 🔹 TITRE -->
+        <input type="text" name="titre"
+               placeholder="Nom de la tâche"
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-purple-500"
+               required>
+
+        <!-- 🔹 DESCRIPTION (NOUVEAU) -->
+        <textarea name="description"
+                  placeholder="Notes / détails (optionnel)"
+                  class="w-full p-3 border rounded focus:ring-2 focus:ring-purple-500">
+        </textarea>
+
+        <!-- 🔹 IMPORTANCE -->
+        <select name="importance"
+                class="w-full p-3 border rounded focus:ring-2 focus:ring-purple-500"
+                required>
+
+            <option value="faible">🟢 Moins important</option>
+            <option value="moyen">🟡 Important</option>
+            <option value="urgent">🔴 Très important</option>
+
+        </select>
+
+        <!-- 🔹 DATE LIMITE -->
+        <input type="date" name="date_limite"
+               class="w-full p-3 border rounded focus:ring-2 focus:ring-purple-500">
+
+        <!-- 🔹 BOUTON -->
+        <button type="submit"
+                class="w-full bg-purple-600 hover:bg-purple-700 
+                       text-white font-bold py-3 rounded-lg transition">
+
+            Ajouter la tâche
+
+        </button>
+
+    </form>
+
+    <!-- 🔙 RETOUR -->
+    <div class="text-center mt-5">
+
+        <!-- 🔴 retour vers dashboard (IMPORTANT) -->
+        <a href="{% url 'home' %}"
+           class="text-purple-700 font-bold hover:underline">
+
+           ⬅️ Retour au dashboard
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

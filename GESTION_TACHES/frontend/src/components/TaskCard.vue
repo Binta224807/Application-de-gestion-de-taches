@@ -110,7 +110,6 @@ const moveTask = (status) => {
         {{ task.title }}
       </h3>
 
-
       <span
         class="badge"
         :class="task.priority"
@@ -218,6 +217,8 @@ const moveTask = (status) => {
 
       <div class="move-buttons">
 
+        <!-- À FAIRE -->
+
         <button
           v-if="task.status !== 'todo'"
           class="move-btn todo-btn"
@@ -228,6 +229,8 @@ const moveTask = (status) => {
 
         </button>
 
+
+        <!-- EN COURS -->
 
         <button
           v-if="task.status !== 'in_progress'"
@@ -240,13 +243,15 @@ const moveTask = (status) => {
         </button>
 
 
+        <!-- TERMINÉ -->
+
         <button
           v-if="task.status !== 'done'"
           class="move-btn done-btn"
           @click="moveTask('done')"
         >
 
-          ✓ Terminée
+          ✓ Terminé
 
         </button>
 
@@ -261,16 +266,22 @@ const moveTask = (status) => {
 
     <div class="actions">
 
+      <!-- MODIFIER -->
+
       <button
         class="edit"
         @click="editTask"
       >
 
         ✏️
-        <span>Modifier</span>
+        <span>Mod</span>
 
       </button>
 
+
+      <!-- ========================= -->
+      <!-- TÂCHE TERMINÉE = ARCHIVER -->
+      <!-- ========================= -->
 
       <button
         v-if="task.status === 'done'"
@@ -279,10 +290,14 @@ const moveTask = (status) => {
       >
 
         📦
-        <span>Archiver</span>
+        <span>Arch</span>
 
       </button>
 
+
+      <!-- ========================= -->
+      <!-- AUTRES STATUTS = SUPPRIMER -->
+      <!-- ========================= -->
 
       <button
         v-else
@@ -291,7 +306,7 @@ const moveTask = (status) => {
       >
 
         🗑️
-        <span>Supprimer</span>
+        <span>Sup</span>
 
       </button>
 
@@ -597,9 +612,11 @@ const moveTask = (status) => {
 
   display:flex;
 
-  justify-content:space-between;
+  flex-wrap:wrap;
 
-  gap:10px;
+  justify-content:center;
+
+  gap:6px;
 
   margin-top:8px;
 
@@ -608,15 +625,19 @@ const moveTask = (status) => {
 
 .actions button {
 
-  flex:1;
+  flex:1 1 auto;
 
-  min-height:42px;
+  min-width:0;
 
-  padding:10px;
+  min-height:34px;
+
+  padding:7px 9px;
 
   border:none;
 
-  border-radius:12px;
+  border-radius:9px;
+
+  font-size:12px;
 
   font-weight:600;
 
@@ -626,8 +647,14 @@ const moveTask = (status) => {
 
   color:white;
 
+  white-space:nowrap;
+
 }
 
+
+/* =========================================
+   MODIFIER
+========================================= */
 
 .edit {
 
@@ -643,6 +670,10 @@ const moveTask = (status) => {
 }
 
 
+/* =========================================
+   SUPPRIMER
+========================================= */
+
 .delete {
 
   background:#dc2626;
@@ -656,6 +687,10 @@ const moveTask = (status) => {
 
 }
 
+
+/* =========================================
+   ARCHIVER
+========================================= */
 
 .archive {
 
@@ -728,9 +763,20 @@ const moveTask = (status) => {
   }
 
 
+  .actions {
+
+    gap:6px;
+
+  }
+
+
   .actions button {
 
-    min-height:46px;
+    min-height:40px;
+
+    padding:8px 7px;
+
+    font-size:11px;
 
   }
 
@@ -782,18 +828,30 @@ const moveTask = (status) => {
   }
 
 
+  /* ===============================
+     ACTIONS COMPACTES
+  =============================== */
+
   .actions {
 
-    flex-direction:column;
+    flex-direction:row;
+
+    flex-wrap:wrap;
+
+    gap:6px;
 
   }
 
 
   .actions button {
 
-    width:100%;
+    flex:1 1 calc(50% - 6px);
 
-    min-height:46px;
+    min-height:40px;
+
+    padding:8px 6px;
+
+    font-size:11px;
 
   }
 

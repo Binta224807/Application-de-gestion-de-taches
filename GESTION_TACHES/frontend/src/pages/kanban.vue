@@ -69,60 +69,57 @@
         class="kanban-board"
 
     >
+    <!-- ===================== -->
+<!-- À FAIRE -->
+<!-- ===================== -->
 
-        <!-- ===================== -->
-        <!-- TODO -->
-        <!-- ===================== -->
-        
         <KanbanColumn
             title="À faire"
             status="todo"
             color="#3B82F6"
             :tasks="todoTasks"
             @taskMoved="moveTask"
-            @moveTask="moveTaskByButton"
             @editTask="editTask"
             @deleteTask="deleteTask"
             @archiveTask="openArchiveModal"
-/>
-
-        <!-- ===================== -->
-        <!-- IN PROGRESS -->
-        <!-- ===================== -->
-
-       <KanbanColumn
-            title="en coure"
-            status="todo"
-            color="#3B82F6"
-            :tasks="todoTasks"
-            @taskMoved="moveTask"
-            @moveTask="moveTaskByButton"
-            @editTask="editTask"
-            @deleteTask="deleteTask"
-            @archiveTask="openArchiveModal"
-/>
-        
-
+        />
 
 
         <!-- ===================== -->
-        <!-- DONE -->
+        <!-- EN COURS -->
         <!-- ===================== -->
+
         <KanbanColumn
-                title="terminée"
-                status="todo"
-                color="#3B82F6"
-                :tasks="todoTasks"
-                @taskMoved="moveTask"
-                @moveTask="moveTaskByButton"
-                @editTask="editTask"
-                @deleteTask="deleteTask"
-                @archiveTask="openArchiveModal"
-     />
-        
+            title="En cours"
+            status="in_progress"
+            color="#F59E0B"
+            :tasks="inProgressTasks"
+            @taskMoved="moveTask"
+            @editTask="editTask"
+            @deleteTask="deleteTask"
+            @archiveTask="openArchiveModal"
+        />
 
+
+        <!-- ===================== -->
+        <!-- TERMINÉE -->
+        <!-- ===================== -->
+
+        <KanbanColumn
+            title="Terminée"
+            status="done"
+            color="#22C55E"
+            :tasks="doneTasks"
+            @taskMoved="moveTask"
+            @editTask="editTask"
+            @deleteTask="deleteTask"
+            @archiveTask="openArchiveModal"
+        />
+                <!-- ===================== -->
+                <!-- TODO -->
+                <!-- ===================== -->
+                
     </div>
-
     <TaskForm
     v-if="showTaskForm"
     :task="selectedTask"

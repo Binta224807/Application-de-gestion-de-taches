@@ -11,12 +11,11 @@ const emit = defineEmits([
   "editTask",
   "deleteTask",
   "archiveTask",
-  "moveTask",
 ]);
 
 
 // ===============================
-// GLISSER-DÉPOSER — ORDINATEUR
+// GLISSER-DÉPOSER
 // ===============================
 
 const startDrag = (event) => {
@@ -25,7 +24,7 @@ const startDrag = (event) => {
 
   event.dataTransfer.setData(
     "taskId",
-    props.task.id
+    String(props.task.id)
   );
 
 };
@@ -72,23 +71,6 @@ const archiveTask = () => {
 
 };
 
-
-// ===============================
-// DÉPLACER — MOBILE
-// ===============================
-
-const moveTask = (status) => {
-
-  emit(
-    "moveTask",
-    {
-      taskId: props.task.id,
-      newStatus: status
-    }
-  );
-
-};
-
 </script>
 
 
@@ -109,6 +91,7 @@ const moveTask = (status) => {
       <h3>
         {{ task.title }}
       </h3>
+
 
       <span
         class="badge"
@@ -161,101 +144,35 @@ const moveTask = (status) => {
     <div class="card-infos">
 
       <span>
-
         📅
         {{ task.due_date || "Pas de date" }}
-
       </span>
 
 
       <span>
-
         📂
         {{ task.project_name || "Sans projet" }}
-
       </span>
 
 
       <span>
-
         🏷️
         {{ task.category_name || "Sans catégorie" }}
-
       </span>
 
 
       <span>
-
         ⏱️
         {{ task.estimated_duration || 0 }} min
-
       </span>
 
 
       <span
         v-if="task.due_time"
       >
-
         🕒
         {{ task.due_time }}
-
       </span>
-
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- DÉPLACEMENT MOBILE -->
-    <!-- ========================= -->
-
-    <div class="mobile-move-actions">
-
-      <p class="move-title">
-        Déplacer la tâche
-      </p>
-
-
-      <div class="move-buttons">
-
-        <!-- À FAIRE -->
-
-        <button
-          v-if="task.status !== 'todo'"
-          class="move-btn todo-btn"
-          @click="moveTask('todo')"
-        >
-
-          ← À faire
-
-        </button>
-
-
-        <!-- EN COURS -->
-
-        <button
-          v-if="task.status !== 'in_progress'"
-          class="move-btn progress-btn"
-          @click="moveTask('in_progress')"
-        >
-
-          → En cours
-
-        </button>
-
-
-        <!-- TERMINÉ -->
-
-        <button
-          v-if="task.status !== 'done'"
-          class="move-btn done-btn"
-          @click="moveTask('done')"
-        >
-
-          ✓ Terminé
-
-        </button>
-
-      </div>
 
     </div>
 
@@ -280,7 +197,7 @@ const moveTask = (status) => {
 
 
       <!-- ========================= -->
-      <!-- TÂCHE TERMINÉE = ARCHIVER -->
+      <!-- TERMINÉE = ARCHIVER -->
       <!-- ========================= -->
 
       <button
@@ -296,7 +213,7 @@ const moveTask = (status) => {
 
 
       <!-- ========================= -->
-      <!-- AUTRES STATUTS = SUPPRIMER -->
+      <!-- TODO / EN COURS = SUPPRIMER -->
       <!-- ========================= -->
 
       <button
@@ -319,34 +236,33 @@ const moveTask = (status) => {
 
 <style scoped>
 
-
 /* =========================================
    CARTE
 ========================================= */
 
 .task-card {
 
-  width:100%;
+  width: 100%;
 
-  box-sizing:border-box;
+  box-sizing: border-box;
 
-  background:#111827;
+  background: #111827;
 
-  border:1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.08);
 
-  border-radius:18px;
+  border-radius: 18px;
 
-  padding:18px;
+  padding: 18px;
 
-  display:flex;
+  display: flex;
 
-  flex-direction:column;
+  flex-direction: column;
 
-  gap:14px;
+  gap: 14px;
 
-  cursor:grab;
+  cursor: grab;
 
-  transition:.25s;
+  transition: .25s;
 
   box-shadow:
     0 6px 18px rgba(0,0,0,.25);
@@ -356,9 +272,9 @@ const moveTask = (status) => {
 
 .task-card:hover {
 
-  transform:translateY(-4px);
+  transform: translateY(-4px);
 
-  border-color:#2563eb;
+  border-color: #2563eb;
 
   box-shadow:
     0 10px 25px rgba(37,99,235,.25);
@@ -368,7 +284,7 @@ const moveTask = (status) => {
 
 .task-card:active {
 
-  cursor:grabbing;
+  cursor: grabbing;
 
 }
 
@@ -379,28 +295,28 @@ const moveTask = (status) => {
 
 .card-header {
 
-  display:flex;
+  display: flex;
 
-  justify-content:space-between;
+  justify-content: space-between;
 
-  align-items:flex-start;
+  align-items: flex-start;
 
-  gap:12px;
+  gap: 12px;
 
 }
 
 
 .card-header h3 {
 
-  font-size:18px;
+  font-size: 18px;
 
-  font-weight:700;
+  font-weight: 700;
 
-  color:white;
+  color: white;
 
-  margin:0;
+  margin: 0;
 
-  word-break:break-word;
+  word-break: break-word;
 
 }
 
@@ -411,47 +327,47 @@ const moveTask = (status) => {
 
 .badge {
 
-  flex-shrink:0;
+  flex-shrink: 0;
 
-  padding:5px 10px;
+  padding: 5px 10px;
 
-  border-radius:30px;
+  border-radius: 30px;
 
-  font-size:10px;
+  font-size: 10px;
 
-  font-weight:bold;
+  font-weight: bold;
 
-  text-transform:uppercase;
+  text-transform: uppercase;
 
-  color:white;
+  color: white;
 
 }
 
 
 .badge.low {
 
-  background:#22c55e;
+  background: #22c55e;
 
 }
 
 
 .badge.medium {
 
-  background:#f59e0b;
+  background: #f59e0b;
 
 }
 
 
 .badge.high {
 
-  background:#ef4444;
+  background: #ef4444;
 
 }
 
 
 .badge.urgent {
 
-  background:#dc2626;
+  background: #dc2626;
 
 }
 
@@ -462,11 +378,11 @@ const moveTask = (status) => {
 
 .task-id {
 
-  color:#facc15;
+  color: #facc15;
 
-  font-size:12px;
+  font-size: 12px;
 
-  margin:0;
+  margin: 0;
 
 }
 
@@ -477,15 +393,15 @@ const moveTask = (status) => {
 
 .description {
 
-  color:#94a3b8;
+  color: #94a3b8;
 
-  font-size:14px;
+  font-size: 14px;
 
-  line-height:1.6;
+  line-height: 1.6;
 
-  margin:0;
+  margin: 0;
 
-  overflow-wrap:anywhere;
+  overflow-wrap: anywhere;
 
 }
 
@@ -496,110 +412,22 @@ const moveTask = (status) => {
 
 .card-infos {
 
-  display:flex;
+  display: flex;
 
-  flex-direction:column;
+  flex-direction: column;
 
-  gap:7px;
+  gap: 7px;
 
-  font-size:13px;
+  font-size: 13px;
 
-  color:#cbd5e1;
+  color: #cbd5e1;
 
 }
 
 
 .card-infos span {
 
-  overflow-wrap:anywhere;
-
-}
-
-
-/* =========================================
-   DÉPLACEMENT MOBILE
-========================================= */
-
-.mobile-move-actions {
-
-  display:none;
-
-  padding-top:8px;
-
-  border-top:1px solid rgba(255,255,255,.08);
-
-}
-
-
-.move-title {
-
-  color:#94a3b8;
-
-  font-size:12px;
-
-  margin:0 0 10px;
-
-}
-
-
-.move-buttons {
-
-  display:flex;
-
-  flex-wrap:wrap;
-
-  gap:8px;
-
-}
-
-
-.move-btn {
-
-  flex:1;
-
-  min-width:110px;
-
-  min-height:42px;
-
-  border:none;
-
-  border-radius:11px;
-
-  color:white;
-
-  font-weight:600;
-
-  cursor:pointer;
-
-  padding:9px 10px;
-
-}
-
-
-.todo-btn {
-
-  background:#2563eb;
-
-}
-
-
-.progress-btn {
-
-  background:#d97706;
-
-}
-
-
-.done-btn {
-
-  background:#16a34a;
-
-}
-
-
-.move-btn:active {
-
-  transform:scale(.97);
+  overflow-wrap: anywhere;
 
 }
 
@@ -610,44 +438,42 @@ const moveTask = (status) => {
 
 .actions {
 
-  display:flex;
+  display: flex;
 
-  flex-wrap:wrap;
+  width: 100%;
 
-  justify-content:center;
+  gap: 8px;
 
-  gap:6px;
-
-  margin-top:8px;
+  margin-top: 8px;
 
 }
 
 
 .actions button {
 
-  flex:1 1 auto;
+  flex: 1;
 
-  min-width:0;
+  min-width: 0;
 
-  min-height:34px;
+  min-height: 38px;
 
-  padding:7px 9px;
+  padding: 8px 10px;
 
-  border:none;
+  border: none;
 
-  border-radius:9px;
+  border-radius: 10px;
 
-  font-size:12px;
+  font-size: 12px;
 
-  font-weight:600;
+  font-weight: 600;
 
-  cursor:pointer;
+  cursor: pointer;
 
-  transition:.25s;
+  transition: .25s;
 
-  color:white;
+  color: white;
 
-  white-space:nowrap;
+  white-space: nowrap;
 
 }
 
@@ -658,14 +484,14 @@ const moveTask = (status) => {
 
 .edit {
 
-  background:#2563eb;
+  background: #2563eb;
 
 }
 
 
 .edit:hover {
 
-  background:#1d4ed8;
+  background: #1d4ed8;
 
 }
 
@@ -676,14 +502,14 @@ const moveTask = (status) => {
 
 .delete {
 
-  background:#dc2626;
+  background: #dc2626;
 
 }
 
 
 .delete:hover {
 
-  background:#b91c1c;
+  background: #b91c1c;
 
 }
 
@@ -694,14 +520,14 @@ const moveTask = (status) => {
 
 .archive {
 
-  background:#16a34a;
+  background: #16a34a;
 
 }
 
 
 .archive:hover {
 
-  background:#15803d;
+  background: #15803d;
 
 }
 
@@ -710,22 +536,22 @@ const moveTask = (status) => {
    MOBILE
 ========================================= */
 
-@media (max-width:768px) {
+@media (max-width: 768px) {
 
   .task-card {
 
-    padding:16px;
+    padding: 16px;
 
-    border-radius:16px;
+    border-radius: 16px;
 
-    cursor:default;
+    cursor: grab;
 
   }
 
 
   .task-card:hover {
 
-    transform:none;
+    transform: none;
 
     box-shadow:
       0 6px 18px rgba(0,0,0,.25);
@@ -733,50 +559,36 @@ const moveTask = (status) => {
   }
 
 
-  .mobile-move-actions {
-
-    display:block;
-
-  }
-
-
-  .card-header {
-
-    align-items:flex-start;
-
-  }
-
-
   .card-header h3 {
 
-    font-size:17px;
+    font-size: 17px;
 
   }
 
 
   .badge {
 
-    font-size:9px;
+    font-size: 9px;
 
-    padding:5px 8px;
+    padding: 5px 8px;
 
   }
 
 
   .actions {
 
-    gap:6px;
+    gap: 7px;
 
   }
 
 
   .actions button {
 
-    min-height:40px;
+    min-height: 40px;
 
-    padding:8px 7px;
+    padding: 8px 7px;
 
-    font-size:11px;
+    font-size: 11px;
 
   }
 
@@ -787,71 +599,49 @@ const moveTask = (status) => {
    PETIT TÉLÉPHONE
 ========================================= */
 
-@media (max-width:480px) {
+@media (max-width: 480px) {
 
   .task-card {
 
-    padding:14px;
+    padding: 14px;
 
   }
 
 
   .card-header {
 
-    flex-direction:column;
+    flex-direction: column;
 
-    gap:8px;
+    gap: 8px;
 
   }
 
 
   .badge {
 
-    align-self:flex-start;
+    align-self: flex-start;
 
   }
 
-
-  .move-buttons {
-
-    flex-direction:column;
-
-  }
-
-
-  .move-btn {
-
-    width:100%;
-
-    min-height:44px;
-
-  }
-
-
-  /* ===============================
-     ACTIONS COMPACTES
-  =============================== */
 
   .actions {
 
-    flex-direction:row;
+    flex-direction: row;
 
-    flex-wrap:wrap;
-
-    gap:6px;
+    gap: 6px;
 
   }
 
 
   .actions button {
 
-    flex:1 1 calc(50% - 6px);
+    flex: 1;
 
-    min-height:40px;
+    min-height: 40px;
 
-    padding:8px 6px;
+    padding: 8px 5px;
 
-    font-size:11px;
+    font-size: 11px;
 
   }
 

@@ -85,21 +85,6 @@ const allowDrop = (event) => {
 };
 
 
-// =========================================
-// BOUTON MOBILE
-// =========================================
-
-const handleMoveTask = ({ task, newStatus }) => {
-
-  emit("moveTask", {
-
-    task,
-
-    newStatus,
-
-  });
-
-};
 
 </script>
 
@@ -158,7 +143,7 @@ const handleMoveTask = ({ task, newStatus }) => {
 
         @archiveTask="emit('archiveTask', $event)"
 
-        @moveTask="handleMoveTask"
+        
 
       />
 

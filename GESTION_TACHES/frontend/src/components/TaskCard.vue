@@ -1,4 +1,5 @@
 <script setup>
+
 const props = defineProps({
   task: {
     type: Object,
@@ -10,91 +11,253 @@ const emit = defineEmits([
   "editTask",
   "deleteTask",
   "archiveTask",
+  "moveTask",
 ]);
 
+
+// ===============================
+// GLISSER-DÉPOSER — ORDINATEUR
+// ===============================
+
 const startDrag = (event) => {
+
   event.dataTransfer.effectAllowed = "move";
+
   event.dataTransfer.setData(
     "taskId",
     props.task.id
   );
+
 };
+
+
+// ===============================
+// MODIFIER
+// ===============================
 
 const editTask = () => {
-  emit("editTask", props.task);
+
+  emit(
+    "editTask",
+    props.task
+  );
+
 };
+
+
+// ===============================
+// SUPPRIMER
+// ===============================
 
 const deleteTask = () => {
-  emit("deleteTask", props.task);
+
+  emit(
+    "deleteTask",
+    props.task
+  );
+
 };
+
+
+// ===============================
+// ARCHIVER
+// ===============================
+
+const archiveTask = () => {
+
+  emit(
+    "archiveTask",
+    props.task
+  );
+
+};
+
+
+// ===============================
+// DÉPLACER — MOBILE
+// ===============================
+
+const moveTask = (status) => {
+
+  emit(
+    "moveTask",
+    {
+      taskId: props.task.id,
+      newStatus: status
+    }
+  );
+
+};
+
 </script>
 
+
 <template>
+
   <div
     class="task-card"
     draggable="true"
     @dragstart="startDrag"
   >
+
+    <!-- ========================= -->
+    <!-- HEADER -->
+    <!-- ========================= -->
+
     <div class="card-header">
 
-  <h3>
-    {{ task.title }}
-  </h3>
+      <h3>
+        {{ task.title }}
+      </h3>
 
 
-  <span
-    class="badge"
-    :class="task.priority"
-  >
-  PRIORTY:
-    {{ task.priority }}
-  </span>
+      <span
+        class="badge"
+        :class="task.priority"
+      >
 
-</div>
+        {{
+          task.priority === "low"
+            ? "Faible"
+            : task.priority === "medium"
+            ? "Moyenne"
+            : task.priority === "high"
+            ? "Élevée"
+            : task.priority === "urgent"
+            ? "Urgente"
+            : task.priority
+        }}
 
-<p style="color:yellow">
-  ID : {{ task.id }}
-</p>
+      </span>
 
-
-
-<p class="description">
-  {{ task.description || "Aucune description" }}
-</p>
-
-
-<div class="card-infos">
-
-  <span>
-    📅DATE_LIM:
-    {{ task.due_date || "Pas de date" }}
-  </span>
+    </div>
 
 
-  <span>
-    📂PROJET:
-    {{ task.project_name || "Sans projet" }}
-  </span>
+    <!-- ========================= -->
+    <!-- ID -->
+    <!-- ========================= -->
+
+    <p class="task-id">
+
+      ID : {{ task.id }}
+
+    </p>
 
 
-  <span>
-    🏷️CAT:
-    {{ task.category_name || "Sans catégorie" }}
-  </span>
+    <!-- ========================= -->
+    <!-- DESCRIPTION -->
+    <!-- ========================= -->
+
+    <p class="description">
+
+      {{ task.description || "Aucune description" }}
+
+    </p>
 
 
-  <span>
-    ⏱️DR:
-    {{ task.estimated_duration }} min
-  </span>
+    <!-- ========================= -->
+    <!-- INFORMATIONS -->
+    <!-- ========================= -->
+
+    <div class="card-infos">
+
+      <span>
+
+        📅
+        {{ task.due_date || "Pas de date" }}
+
+      </span>
 
 
-<span v-if="task.due_time">
-    🕒TIME:
-    {{ task.due_time }}
-</span>
+      <span>
 
-</div>
+        📂
+        {{ task.project_name || "Sans projet" }}
+
+      </span>
+
+
+      <span>
+
+        🏷️
+        {{ task.category_name || "Sans catégorie" }}
+
+      </span>
+
+
+      <span>
+
+        ⏱️
+        {{ task.estimated_duration || 0 }} min
+
+      </span>
+
+
+      <span
+        v-if="task.due_time"
+      >
+
+        🕒
+        {{ task.due_time }}
+
+      </span>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- DÉPLACEMENT MOBILE -->
+    <!-- ========================= -->
+
+    <div class="mobile-move-actions">
+
+      <p class="move-title">
+        Déplacer la tâche
+      </p>
+
+
+      <div class="move-buttons">
+
+        <button
+          v-if="task.status !== 'todo'"
+          class="move-btn todo-btn"
+          @click="moveTask('todo')"
+        >
+
+          ← À faire
+
+        </button>
+
+
+        <button
+          v-if="task.status !== 'in_progress'"
+          class="move-btn progress-btn"
+          @click="moveTask('in_progress')"
+        >
+
+          → En cours
+
+        </button>
+
+
+        <button
+          v-if="task.status !== 'done'"
+          class="move-btn done-btn"
+          @click="moveTask('done')"
+        >
+
+          ✓ Terminée
+
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- ACTIONS -->
+    <!-- ========================= -->
 
     <div class="actions">
 
@@ -102,221 +265,537 @@ const deleteTask = () => {
         class="edit"
         @click="editTask"
       >
-        ✏ Modifier
+
+        ✏️
+        <span>Modifier</span>
+
       </button>
+
 
       <button
         v-if="task.status === 'done'"
         class="archive"
-        @click="emit('archiveTask', task)"
+        @click="archiveTask"
       >
-        📦 Archiver
+
+        📦
+        <span>Archiver</span>
+
       </button>
+
 
       <button
         v-else
         class="delete"
         @click="deleteTask"
       >
-        🗑 Supprimer
+
+        🗑️
+        <span>Supprimer</span>
+
       </button>
 
     </div>
+
   </div>
+
 </template>
+
 
 <style scoped>
 
-.task-card{
 
-background:#111827;
+/* =========================================
+   CARTE
+========================================= */
 
-border:1px solid rgba(255,255,255,.08);
+.task-card {
 
-border-radius:18px;
+  width:100%;
 
-padding:18px;
+  box-sizing:border-box;
 
-display:flex;
+  background:#111827;
 
-flex-direction:column;
+  border:1px solid rgba(255,255,255,.08);
 
-gap:14px;
+  border-radius:18px;
 
-cursor:grab;
+  padding:18px;
 
-transition:.25s;
+  display:flex;
 
-box-shadow:0 6px 18px rgba(0,0,0,.25);
+  flex-direction:column;
 
-}
+  gap:14px;
 
-.task-card:hover{
+  cursor:grab;
 
-transform:translateY(-5px);
+  transition:.25s;
 
-border-color:#2563eb;
-
-box-shadow:0 10px 25px rgba(37,99,235,.25);
-
-}
-
-.task-card:active{
-
-cursor:grabbing;
+  box-shadow:
+    0 6px 18px rgba(0,0,0,.25);
 
 }
 
-.card-header{
 
-display:flex;
+.task-card:hover {
 
-justify-content:space-between;
+  transform:translateY(-4px);
 
-align-items:flex-start;
+  border-color:#2563eb;
 
-gap:12px;
-
-}
-
-.card-header h3{
-
-font-size:18px;
-
-font-weight:700;
-
-color:white;
-
-margin:0;
+  box-shadow:
+    0 10px 25px rgba(37,99,235,.25);
 
 }
 
-.description{
 
-color:#94a3b8;
+.task-card:active {
 
-font-size:14px;
-
-line-height:1.6;
+  cursor:grabbing;
 
 }
 
-.card-infos{
 
-display:flex;
+/* =========================================
+   HEADER
+========================================= */
 
-flex-direction:column;
+.card-header {
 
-gap:6px;
+  display:flex;
 
-font-size:13px;
+  justify-content:space-between;
 
-color:#cbd5e1;
+  align-items:flex-start;
 
-}
-
-.badge{
-
-padding:5px 12px;
-
-border-radius:30px;
-
-font-size:11px;
-
-font-weight:bold;
-
-text-transform:uppercase;
-
-color:white;
+  gap:12px;
 
 }
 
-.badge.low{
 
-background:#22c55e;
+.card-header h3 {
 
-}
+  font-size:18px;
 
-.badge.medium{
+  font-weight:700;
 
-background:#f59e0b;
+  color:white;
 
-}
+  margin:0;
 
-.badge.high{
-
-background:#ef4444;
+  word-break:break-word;
 
 }
 
-.actions{
 
-display:flex;
+/* =========================================
+   PRIORITÉ
+========================================= */
 
-justify-content:space-between;
+.badge {
 
-margin-top:8px;
+  flex-shrink:0;
 
-gap:10px;
+  padding:5px 10px;
 
-}
+  border-radius:30px;
 
-.actions button{
+  font-size:10px;
 
-flex:1;
+  font-weight:bold;
 
-padding:10px;
+  text-transform:uppercase;
 
-border:none;
-
-border-radius:12px;
-
-font-weight:600;
-
-cursor:pointer;
-
-transition:.25s;
+  color:white;
 
 }
 
-.edit{
 
-background:#2563eb;
+.badge.low {
 
-color:white;
-
-}
-
-.edit:hover{
-
-background:#1d4ed8;
+  background:#22c55e;
 
 }
 
-.delete{
 
-background:#dc2626;
+.badge.medium {
 
-color:white;
-
-}
-
-.delete:hover{
-
-background:#b91c1c;
-
-}
-.archive{
-
-    background:#16a34a;
-
-    color:white;
+  background:#f59e0b;
 
 }
 
-.archive:hover{
 
-    background:#15803d;
+.badge.high {
+
+  background:#ef4444;
+
+}
+
+
+.badge.urgent {
+
+  background:#dc2626;
+
+}
+
+
+/* =========================================
+   ID
+========================================= */
+
+.task-id {
+
+  color:#facc15;
+
+  font-size:12px;
+
+  margin:0;
+
+}
+
+
+/* =========================================
+   DESCRIPTION
+========================================= */
+
+.description {
+
+  color:#94a3b8;
+
+  font-size:14px;
+
+  line-height:1.6;
+
+  margin:0;
+
+  overflow-wrap:anywhere;
+
+}
+
+
+/* =========================================
+   INFORMATIONS
+========================================= */
+
+.card-infos {
+
+  display:flex;
+
+  flex-direction:column;
+
+  gap:7px;
+
+  font-size:13px;
+
+  color:#cbd5e1;
+
+}
+
+
+.card-infos span {
+
+  overflow-wrap:anywhere;
+
+}
+
+
+/* =========================================
+   DÉPLACEMENT MOBILE
+========================================= */
+
+.mobile-move-actions {
+
+  display:none;
+
+  padding-top:8px;
+
+  border-top:1px solid rgba(255,255,255,.08);
+
+}
+
+
+.move-title {
+
+  color:#94a3b8;
+
+  font-size:12px;
+
+  margin:0 0 10px;
+
+}
+
+
+.move-buttons {
+
+  display:flex;
+
+  flex-wrap:wrap;
+
+  gap:8px;
+
+}
+
+
+.move-btn {
+
+  flex:1;
+
+  min-width:110px;
+
+  min-height:42px;
+
+  border:none;
+
+  border-radius:11px;
+
+  color:white;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  padding:9px 10px;
+
+}
+
+
+.todo-btn {
+
+  background:#2563eb;
+
+}
+
+
+.progress-btn {
+
+  background:#d97706;
+
+}
+
+
+.done-btn {
+
+  background:#16a34a;
+
+}
+
+
+.move-btn:active {
+
+  transform:scale(.97);
+
+}
+
+
+/* =========================================
+   ACTIONS
+========================================= */
+
+.actions {
+
+  display:flex;
+
+  justify-content:space-between;
+
+  gap:10px;
+
+  margin-top:8px;
+
+}
+
+
+.actions button {
+
+  flex:1;
+
+  min-height:42px;
+
+  padding:10px;
+
+  border:none;
+
+  border-radius:12px;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:.25s;
+
+  color:white;
+
+}
+
+
+.edit {
+
+  background:#2563eb;
+
+}
+
+
+.edit:hover {
+
+  background:#1d4ed8;
+
+}
+
+
+.delete {
+
+  background:#dc2626;
+
+}
+
+
+.delete:hover {
+
+  background:#b91c1c;
+
+}
+
+
+.archive {
+
+  background:#16a34a;
+
+}
+
+
+.archive:hover {
+
+  background:#15803d;
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width:768px) {
+
+  .task-card {
+
+    padding:16px;
+
+    border-radius:16px;
+
+    cursor:default;
+
+  }
+
+
+  .task-card:hover {
+
+    transform:none;
+
+    box-shadow:
+      0 6px 18px rgba(0,0,0,.25);
+
+  }
+
+
+  .mobile-move-actions {
+
+    display:block;
+
+  }
+
+
+  .card-header {
+
+    align-items:flex-start;
+
+  }
+
+
+  .card-header h3 {
+
+    font-size:17px;
+
+  }
+
+
+  .badge {
+
+    font-size:9px;
+
+    padding:5px 8px;
+
+  }
+
+
+  .actions button {
+
+    min-height:46px;
+
+  }
+
+}
+
+
+/* =========================================
+   PETIT TÉLÉPHONE
+========================================= */
+
+@media (max-width:480px) {
+
+  .task-card {
+
+    padding:14px;
+
+  }
+
+
+  .card-header {
+
+    flex-direction:column;
+
+    gap:8px;
+
+  }
+
+
+  .badge {
+
+    align-self:flex-start;
+
+  }
+
+
+  .move-buttons {
+
+    flex-direction:column;
+
+  }
+
+
+  .move-btn {
+
+    width:100%;
+
+    min-height:44px;
+
+  }
+
+
+  .actions {
+
+    flex-direction:column;
+
+  }
+
+
+  .actions button {
+
+    width:100%;
+
+    min-height:46px;
+
+  }
 
 }
 

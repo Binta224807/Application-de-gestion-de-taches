@@ -1156,306 +1156,556 @@ onMounted(async()=>{
 
 <style scoped>
 
-.overlay{
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.85);
 
-position:fixed;
-inset:0;
-background:rgba(15,23,42,.8);
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    z-index: 9999;
+
+    padding: 20px;
+}
+
+
+/* =========================================
+   MODALE
+========================================= */
+
+.task-modal {
+
+    width: min(950px, 100%);
+
+    max-height: 90vh;
+
+    overflow-y: auto;
+
+    background: #0f172a;
+
+    padding: 32px;
+
+    border-radius: 28px;
+
+    color: white;
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, .5);
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.modal-header {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+
+    gap: 20px;
+
+    margin-bottom: 25px;
+}
+
+
+.modal-header h2 {
+
+    font-size: 24px;
+
+    font-weight: 800;
+
+    margin: 0;
 
 }
 
 
+.modal-header p {
 
-.task-modal{
+    color: #94a3b8;
 
-width:min(950px,95%);
-
-max-height:90vh;
-
-overflow:auto;
-
-background:#0f172a;
-
-padding:32px;
-
-border-radius:28px;
-
-color:white;
-
-box-shadow:0 30px 80px rgba(0,0,0,.5);
+    margin-top: 6px;
 
 }
 
 
+.close-btn {
 
-.modal-header{
+    flex-shrink: 0;
 
-display:flex;
+    background: #1e293b;
 
-justify-content:space-between;
+    color: white;
 
-margin-bottom:25px;
+    border: none;
+
+    border-radius: 12px;
+
+    width: 42px;
+
+    height: 42px;
+
+    cursor: pointer;
+
+    font-size: 18px;
+}
+
+
+/* =========================================
+   SECTIONS
+========================================= */
+
+.section {
+
+    background: #1e293b;
+
+    padding: 22px;
+
+    border-radius: 20px;
+
+    margin-bottom: 20px;
+}
+
+
+.section h3 {
+
+    margin-top: 0;
+
+    margin-bottom: 18px;
+
+    color: white;
 
 }
 
 
+/* =========================================
+   FORM
+========================================= */
 
-.close-btn{
+label {
 
-background:#1e293b;
+    display: block;
 
-color:white;
+    margin-bottom: 8px;
 
-border:none;
+    color: #cbd5e1;
 
-border-radius:12px;
-
-width:42px;
-
-height:42px;
-
-cursor:pointer;
-
+    font-weight: 600;
 }
-
-
-
-.section{
-
-background:#1e293b;
-
-padding:22px;
-
-border-radius:20px;
-
-margin-bottom:20px;
-
-}
-
-
-
-label{
-
-display:block;
-
-margin-bottom:8px;
-
-color:#cbd5e1;
-
-font-weight:600;
-
-}
-
 
 
 input,
 textarea,
-select{
+select {
 
-width:100%;
+    width: 100%;
 
-padding:14px;
+    box-sizing: border-box;
 
-border-radius:14px;
+    padding: 14px;
 
-border:none;
+    border-radius: 14px;
 
-background:#172033;
+    border: 1px solid transparent;
 
-color:white;
+    background: #172033;
 
-margin-bottom:15px;
+    color: white;
 
+    margin-bottom: 15px;
+
+    font-size: 15px;
 }
 
 
+input:focus,
+textarea:focus,
+select:focus {
 
-textarea{
+    outline: none;
 
-min-height:120px;
-
+    border-color: #2563eb;
 }
 
 
+textarea {
 
-.grid{
+    min-height: 120px;
 
-display:grid;
-
-grid-template-columns:1fr 1fr;
-
-gap:20px;
-
+    resize: vertical;
 }
 
 
+/* =========================================
+   GRILLE
+========================================= */
 
-.create-box{
+.grid {
 
-margin-top:20px;
+    display: grid;
 
-padding:20px;
+    grid-template-columns: 1fr 1fr;
 
-background:#172033;
-
-border-radius:18px;
-
-border:1px solid #334155;
-
+    gap: 20px;
 }
 
 
+/* =========================================
+   CREATION
+========================================= */
 
-.create-btn{
+.create-box {
 
-background:#2563eb;
+    margin-top: 20px;
 
-color:white;
+    padding: 20px;
 
-border:none;
+    background: #172033;
 
-padding:12px 18px;
+    border-radius: 18px;
 
-border-radius:12px;
-
-cursor:pointer;
-
+    border: 1px solid #334155;
 }
 
 
+.create-btn {
 
-.duration{
+    background: #2563eb;
 
-margin-top:20px;
+    color: white;
 
+    border: none;
+
+    padding: 12px 18px;
+
+    border-radius: 12px;
+
+    cursor: pointer;
+
+    font-weight: 600;
 }
 
 
+/* =========================================
+   DUREE
+========================================= */
 
-.counter{
+.duration {
 
-display:flex;
-
-align-items:center;
-
-gap:20px;
-
+    margin-top: 20px;
 }
 
 
+.counter {
 
-.counter button{
+    display: flex;
 
-width:40px;
+    align-items: center;
 
-height:40px;
+    justify-content: center;
 
-border:none;
-
-border-radius:10px;
-
-background:#2563eb;
-
-color:white;
-
-font-size:22px;
-
-cursor:pointer;
-
+    gap: 20px;
 }
 
 
+.counter button {
 
-.favorite{
+    width: 44px;
 
-display:flex;
+    height: 44px;
 
-gap:10px;
+    border: none;
 
-align-items:center;
+    border-radius: 10px;
 
+    background: #2563eb;
+
+    color: white;
+
+    font-size: 22px;
+
+    cursor: pointer;
 }
 
 
+/* =========================================
+   FAVORIS
+========================================= */
 
-.footer{
+.favorite {
 
-display:flex;
+    display: flex;
 
-justify-content:flex-end;
+    align-items: center;
 
-gap:15px;
+    gap: 10px;
 
+    cursor: pointer;
 }
 
+
+.favorite input {
+
+    width: auto;
+
+    margin: 0;
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+.footer {
+
+    display: flex;
+
+    justify-content: flex-end;
+
+    gap: 15px;
+
+    margin-top: 10px;
+}
 
 
 .cancel,
-.save{
+.save {
 
-padding:14px 25px;
+    padding: 14px 25px;
 
-border:none;
+    border: none;
 
-border-radius:14px;
+    border-radius: 14px;
 
-cursor:pointer;
+    cursor: pointer;
+
+    font-weight: 700;
+}
+
+
+.cancel {
+
+    background: #334155;
+
+    color: white;
+}
+
+
+.save {
+
+    background: #2563eb;
+
+    color: white;
+}
+
+
+.save:disabled {
+
+    opacity: .6;
+
+    cursor: not-allowed;
+}
+
+
+.error {
+
+    display: block;
+
+    color: #ef4444;
+
+    margin-top: -8px;
+
+    margin-bottom: 12px;
+}
+
+
+/* =========================================
+   TABLETTE
+========================================= */
+
+@media (max-width: 800px) {
+
+    .grid {
+
+        grid-template-columns: 1fr;
+    }
 
 }
 
 
+/* =========================================
+   MOBILE
+========================================= */
 
-.cancel{
+@media (max-width: 600px) {
 
-background:#334155;
+    .overlay {
 
-color:white;
+        padding: 0;
+
+        align-items: stretch;
+
+    }
+
+
+    .task-modal {
+
+        width: 100%;
+
+        max-height: 100vh;
+
+        height: 100vh;
+
+        border-radius: 0;
+
+        padding: 20px 16px;
+
+        overflow-y: auto;
+
+        box-sizing: border-box;
+    }
+
+
+    .modal-header {
+
+        position: sticky;
+
+        top: 0;
+
+        z-index: 2;
+
+        background: #0f172a;
+
+        padding-bottom: 15px;
+
+        margin-bottom: 15px;
+    }
+
+
+    .modal-header h2 {
+
+        font-size: 21px;
+
+    }
+
+
+    .modal-header p {
+
+        font-size: 13px;
+
+    }
+
+
+    .section {
+
+        padding: 16px;
+
+        border-radius: 16px;
+
+        margin-bottom: 14px;
+    }
+
+
+    .section h3 {
+
+        font-size: 16px;
+
+    }
+
+
+    input,
+    textarea,
+    select {
+
+        font-size: 16px;
+
+        padding: 13px;
+
+    }
+
+
+    textarea {
+
+        min-height: 100px;
+
+    }
+
+
+    .footer {
+
+        position: sticky;
+
+        bottom: 0;
+
+        background: #0f172a;
+
+        padding: 15px 0 5px;
+
+        flex-direction: column-reverse;
+
+        gap: 10px;
+    }
+
+
+    .cancel,
+    .save {
+
+        width: 100%;
+
+        min-height: 48px;
+
+    }
+
+
+    .counter {
+
+        justify-content: space-between;
+
+    }
+
+
+    .counter button {
+
+        width: 48px;
+
+        height: 48px;
+
+    }
 
 }
 
 
+/* =========================================
+   PETIT TELEPHONE
+========================================= */
 
-.save{
+@media (max-width: 380px) {
 
-background:#2563eb;
+    .task-modal {
 
-color:white;
+        padding: 16px 12px;
 
-font-weight:700;
-
-}
-
-
-
-.error{
-
-color:#ef4444;
-
-}
+    }
 
 
+    .section {
 
-@media(max-width:800px){
+        padding: 14px;
 
-.grid{
-
-grid-template-columns:1fr;
-
-}
+    }
 
 
-.footer{
+    .modal-header h2 {
 
-flex-direction:column;
+        font-size: 19px;
+
+    }
 
 }
-
-
-}
-
 
 </style>

@@ -73,33 +73,34 @@
         <!-- ===================== -->
         <!-- TODO -->
         <!-- ===================== -->
+        
         <KanbanColumn
             title="À faire"
             status="todo"
             color="#3B82F6"
             :tasks="todoTasks"
             @taskMoved="moveTask"
+            @moveTask="moveTaskByButton"
             @editTask="editTask"
             @deleteTask="deleteTask"
             @archiveTask="openArchiveModal"
-            />
-        
+/>
 
         <!-- ===================== -->
         <!-- IN PROGRESS -->
         <!-- ===================== -->
 
        <KanbanColumn
-            title="En cours"
-            status="in_progress"
-            color="#F59E0B"
-            :tasks="inProgressTasks"
+            title="en coure"
+            status="todo"
+            color="#3B82F6"
+            :tasks="todoTasks"
             @taskMoved="moveTask"
+            @moveTask="moveTaskByButton"
             @editTask="editTask"
             @deleteTask="deleteTask"
             @archiveTask="openArchiveModal"
-        />
-
+/>
         
 
 
@@ -108,15 +109,17 @@
         <!-- DONE -->
         <!-- ===================== -->
         <KanbanColumn
-            title="Terminées"
-            status="done"
-            color="#22C55E"
-            :tasks="doneTasks"
-            @taskMoved="moveTask"
-            @editTask="editTask"
-            @deleteTask="deleteTask"
-            @archiveTask="openArchiveModal"
-/>
+                title="terminée"
+                status="todo"
+                color="#3B82F6"
+                :tasks="todoTasks"
+                @taskMoved="moveTask"
+                @moveTask="moveTaskByButton"
+                @editTask="editTask"
+                @deleteTask="deleteTask"
+                @archiveTask="openArchiveModal"
+     />
+        
 
     </div>
 
@@ -366,6 +369,42 @@ const moveTask = async ({ taskId, newStatus }) => {
     catch(error){
 
         console.error(error);
+
+    }
+
+};
+
+const moveTaskByButton = async ({ task, newStatus }) => {
+
+    // Évite de faire une requête
+    // si la tâche est déjà dans cette colonne
+
+    if (task.status === newStatus) {
+        return;
+    }
+
+    try {
+
+        await api.patch(
+
+            `tasks/${task.id}/`,
+
+            {
+                status: newStatus
+            }
+
+        );
+
+        await loadTasks();
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "Erreur déplacement tâche :",
+            error.response?.data || error
+        );
 
     }
 

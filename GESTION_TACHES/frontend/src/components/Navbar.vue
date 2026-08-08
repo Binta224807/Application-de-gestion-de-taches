@@ -2,665 +2,919 @@
 
 <header class="navbar">
 
-  <button
-    class="mobile-menu"
-    @click="$emit('toggleMenu')"
-    >
-    ☰
-    </button>
-  <!-- RECHERCHE -->
-
-  <div class="search-container">
-
-    <div class="search-box">
-
-      <span class="search-icon">
-        🔍
-      </span>
-
-      <input
-
-          
-        
-          v-model="search"
-          @input="updateSearch(search)"
-          type="text"
-          placeholder="Rechercher..."
-          class="
-          w-full
-          bg-slate-900
-          border
-          border-slate-700
-          rounded-2xl
-          px-5
-          py-3
-          text-white
-          outline-none
-          focus:border-indigo-500
-          transition
-          "
-
-/>
-
-
-    </div>
-
-  </div>
-
-
-
-  <!-- PROFIL -->
-
-  <div class="right-section">
-
-
-    <div class="profile">
-
-
-      <div class="avatar">
-
-        {{ usernameInitial }}
-
-      </div>
-
-
-
-      <div class="user-info">
-
-        <p class="username">
-          {{ username }}
-        </p>
-
-
-        <p class="status">
-
-          <span></span>
-
-          En ligne
-
-        </p>
-
-
-      </div>
-
-
-    </div>
-
-
-
-    <!-- DECONNEXION -->
-
+    <!-- MENU MOBILE -->
     <button
-
-      v-if="isAuthenticated"
-
-      class="logout-btn"
-
-      @click="logout"
-
+        class="mobile-menu"
+        @click="emit('toggleMenu')"
+        aria-label="Ouvrir le menu"
     >
-
-      Se déconnecter
-
+        ☰
     </button>
 
 
+    <!-- LOGO / MARQUE -->
+    <div class="brand">
 
-    <RouterLink
+        <div class="brand-icon">
+            ✓
+        </div>
 
-      v-else
+        <div class="brand-text">
+            <strong>NOVA</strong>
+            <span>TASKS</span>
+        </div>
 
-      to="/login"
-
-      class="login-btn"
-
-    >
-
-      Connexion
-
-    </RouterLink>
+    </div>
 
 
-  </div>
+    <!-- RECHERCHE -->
+    <div class="search-container">
 
+        <div class="search-box">
+
+            <span class="search-icon">
+                🔍
+            </span>
+
+            <input
+                v-model="search"
+                @input="updateSearch(search)"
+                type="text"
+                placeholder="Rechercher une tâche..."
+            />
+
+            <span
+                v-if="search"
+                class="clear-search"
+                @click="clearSearch"
+            >
+                ×
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- PARTIE DROITE -->
+    <div class="right-section">
+
+        <!-- PROFIL -->
+        <div
+            v-if="isAuthenticated"
+            class="profile"
+        >
+
+            <div class="avatar">
+                {{ usernameInitial }}
+            </div>
+
+            <div class="user-info">
+
+                <p class="username">
+                    {{ username }}
+                </p>
+
+                <p class="status">
+
+                    <span class="status-dot"></span>
+
+                    En ligne
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- DECONNEXION -->
+        <button
+            v-if="isAuthenticated"
+            class="logout-btn"
+            @click="logout"
+        >
+            <span>↪</span>
+            <span class="logout-text">
+                Déconnexion
+            </span>
+        </button>
+
+
+        <!-- CONNEXION -->
+        <RouterLink
+            v-else
+            to="/login"
+            class="login-btn"
+        >
+            Connexion
+        </RouterLink>
+
+    </div>
 
 </header>
-
 
 </template>
 
 
-
 <script setup>
 
-import { ref, computed } from "vue";
-import { useSearch } from "../components/useSearch";
+import {
+    ref,
+    computed,
+    onMounted,
+    onBeforeUnmount
+} from "vue";
+
 import { useRouter } from "vue-router";
 
+import { useSearch } from "../components/useSearch";
+
+
+const router = useRouter();
 
 const { updateSearch } = useSearch();
-const router = useRouter();
+
+const emit = defineEmits([
+    "toggleMenu"
+]);
 
 
 const search = ref("");
 
+const username = ref("Utilisateur");
+
+const isAuthenticated = ref(false);
 
 
+// =====================================================
+// RECUPERATION UTILISATEUR
+// =====================================================
+
+const updateUser = () => {
+
+    const access =
+        localStorage.getItem("access");
+
+    const accessToken =
+        localStorage.getItem("access_token");
+
+    isAuthenticated.value =
+        !!(access || accessToken);
 
 
-const username =
-
-localStorage.getItem("username")
-
-|| "Utilisateur";
-
-
-
-const isAuthenticated = computed(()=>{
-
-return localStorage.getItem("access") || localStorage.getItem("access_token")!== null;
-
-});
-
-
-
-
-const usernameInitial = computed(()=>{
-
-return username
-
-.charAt(0)
-
-.toUpperCase();
-
-});
-
-
-
-
-
-const logout = ()=>{
-
-
-localStorage.removeItem(
-"access"
-);
-localStorage.removeItem(
-"refresh"
-);
-
-localStorage.removeItem(
-"access_token"
-);
-localStorage.removeItem(
-"refresh_token"
-);
-
-localStorage.removeItem(
-"username"
-);
-
-
-
-router.push("/login");
-
+    username.value =
+        localStorage.getItem("username")
+        || "Utilisateur";
 
 };
 
-defineEmits([
-    "toggleMenu"
-]);
+
+// =====================================================
+// INITIAL
+// =====================================================
+
+onMounted(() => {
+
+    updateUser();
+
+    window.addEventListener(
+        "storage",
+        updateUser
+    );
+
+});
+
+
+// =====================================================
+// NETTOYAGE
+// =====================================================
+
+onBeforeUnmount(() => {
+
+    window.removeEventListener(
+        "storage",
+        updateUser
+    );
+
+});
+
+
+// =====================================================
+// INITIAL UTILISATEUR
+// =====================================================
+
+const usernameInitial = computed(() => {
+
+    return username.value
+        .charAt(0)
+        .toUpperCase();
+
+});
+
+
+// =====================================================
+// RECHERCHE
+// =====================================================
+
+const clearSearch = () => {
+
+    search.value = "";
+
+    updateSearch("");
+
+};
+
+
+// =====================================================
+// DECONNEXION
+// =====================================================
+
+const logout = () => {
+
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+
+    localStorage.removeItem("username");
+
+    isAuthenticated.value = false;
+
+    username.value = "Utilisateur";
+
+    router.push("/login");
+
+};
 
 </script>
 
 
-
 <style scoped>
 
+/* =====================================================
+   NAVBAR
+===================================================== */
 
 .navbar {
 
+    width: 100%;
 
-height:80px;
+    min-height: 76px;
 
+    box-sizing: border-box;
 
-background:
+    display: flex;
 
-linear-gradient(
-90deg,
-#020617,
-#111827
-);
+    align-items: center;
 
+    gap: 24px;
 
-border-bottom:
+    padding: 12px 28px;
 
-1px solid rgba(148,163,184,.15);
+    background:
+        linear-gradient(
+            135deg,
+            #020617 0%,
+            #0f172a 55%,
+            #111827 100%
+        );
 
+    border-bottom:
+        1px solid rgba(148,163,184,.15);
 
+    box-shadow:
+        0 8px 30px rgba(0,0,0,.20);
 
-display:flex;
+    position: relative;
 
-
-align-items:center;
-
-
-justify-content:space-between;
-
-
-padding:0 32px;
-
+    z-index: 100;
 
 }
 
 
+/* =====================================================
+   BRAND
+===================================================== */
 
-/* SEARCH */
+.brand {
 
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    flex-shrink: 0;
+
+}
+
+
+.brand-icon {
+
+    width: 40px;
+
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
+
+    color: white;
+
+    font-size: 20px;
+
+    font-weight: 900;
+
+    box-shadow:
+        0 8px 20px rgba(37,99,235,.25);
+
+}
+
+
+.brand-text {
+
+    display: flex;
+
+    flex-direction: column;
+
+    line-height: 1;
+
+}
+
+
+.brand-text strong {
+
+    color: white;
+
+    font-size: 15px;
+
+    letter-spacing: 1px;
+
+}
+
+
+.brand-text span {
+
+    color: #60a5fa;
+
+    font-size: 10px;
+
+    letter-spacing: 2px;
+
+    margin-top: 4px;
+
+}
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
 
 .search-container {
 
-flex:1;
+    flex: 1;
 
-max-width:600px;
+    display: flex;
 
+    justify-content: center;
+
+    min-width: 0;
 
 }
-
 
 
 .search-box {
 
+    width: min(100%, 600px);
 
-display:flex;
+    height: 46px;
 
+    display: flex;
 
-align-items:center;
+    align-items: center;
 
+    gap: 10px;
 
-gap:12px;
+    box-sizing: border-box;
 
+    padding: 0 15px;
 
-background:
+    background:
+        rgba(15,23,42,.85);
 
-rgba(15,23,42,.8);
+    border:
+        1px solid rgba(148,163,184,.18);
 
+    border-radius: 14px;
 
-
-border:
-
-1px solid rgba(148,163,184,.2);
-
-
-
-padding:12px 18px;
-
-
-
-border-radius:18px;
-
-
-
-transition:.3s;
-
+    transition: .25s;
 
 }
-
 
 
 .search-box:focus-within {
 
+    border-color: #6366f1;
 
-border-color:#6366f1;
-
-
-box-shadow:
-
-0 0 20px rgba(99,102,241,.25);
-
-
-}
-
-
-
-.search-box input {
-
-
-width:100%;
-
-
-background:transparent;
-
-
-border:none;
-
-
-outline:none;
-
-
-color:white;
-
-
-font-size:15px;
-
-
-}
-
-
-
-.search-box input::placeholder {
-
-
-color:#94a3b8;
-
+    box-shadow:
+        0 0 0 3px rgba(99,102,241,.10);
 
 }
 
 
 .search-icon {
 
+    font-size: 16px;
 
-font-size:18px;
-
+    flex-shrink: 0;
 
 }
 
 
+.search-box input {
 
-/* RIGHT */
+    flex: 1;
 
+    min-width: 0;
+
+    border: none;
+
+    outline: none;
+
+    background: transparent;
+
+    color: white;
+
+    font-size: 14px;
+
+}
+
+
+.search-box input::placeholder {
+
+    color: #64748b;
+
+}
+
+
+.clear-search {
+
+    color: #94a3b8;
+
+    font-size: 20px;
+
+    cursor: pointer;
+
+    line-height: 1;
+
+}
+
+
+/* =====================================================
+   RIGHT
+===================================================== */
 
 .right-section {
 
+    display: flex;
 
-display:flex;
+    align-items: center;
 
+    gap: 18px;
 
-align-items:center;
-
-
-gap:25px;
-
+    flex-shrink: 0;
 
 }
 
 
+/* =====================================================
+   PROFILE
+===================================================== */
 
 .profile {
 
+    display: flex;
 
-display:flex;
+    align-items: center;
 
-
-align-items:center;
-
-
-gap:12px;
-
+    gap: 10px;
 
 }
-
 
 
 .avatar {
 
+    width: 43px;
 
-width:45px;
+    height: 43px;
 
+    min-width: 43px;
 
-height:45px;
+    border-radius: 50%;
 
+    display: flex;
 
-border-radius:50%;
+    align-items: center;
 
+    justify-content: center;
 
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
 
-display:flex;
+    color: white;
 
+    font-size: 16px;
 
-align-items:center;
+    font-weight: 800;
 
-
-justify-content:center;
-
-
-
-background:
-
-linear-gradient(
-135deg,
-#2563eb,
-#9333ea
-);
-
-
-
-color:white;
-
-
-font-weight:900;
-
+    border:
+        2px solid rgba(255,255,255,.10);
 
 }
-
-
-
-.username {
-
-
-color:white;
-
-
-font-weight:700;
-
-
-margin:0;
-
-
-}
-
-
-
-.status {
-
-
-display:flex;
-
-
-align-items:center;
-
-
-gap:6px;
-
-
-
-font-size:12px;
-
-
-color:#22c55e;
-
-
-}
-
-
-
-.status span {
-
-
-width:8px;
-
-
-height:8px;
-
-
-border-radius:50%;
-
-
-background:#22c55e;
-
-
-}
-
-
-
-/* BUTTONS */
-
-
-.logout-btn,
-
-.login-btn {
-
-
-padding:10px 18px;
-
-
-border-radius:14px;
-
-
-font-weight:700;
-
-
-border:none;
-
-
-cursor:pointer;
-
-
-text-decoration:none;
-
-
-transition:.3s;
-
-
-}
-
-
-
-.logout-btn {
-
-
-background:
-
-linear-gradient(
-135deg,
-#ef4444,
-#dc2626
-);
-
-
-
-color:white;
-
-
-}
-
-
-
-.logout-btn:hover {
-
-
-transform:translateY(-2px);
-
-
-box-shadow:
-
-0 10px 25px rgba(239,68,68,.3);
-
-
-}
-
-
-
-.login-btn {
-
-
-background:
-
-linear-gradient(
-135deg,
-#2563eb,
-#7c3aed
-);
-
-
-
-color:white;
-
-
-}
-
-
-
-@media(max-width:900px){
-
-
-.navbar {
-
-
-padding:0 15px;
-
-
-}
-
-
-
-.search-container {
-
-
-max-width:300px;
-
-
-}
-
 
 
 .user-info {
 
+    display: flex;
 
-display:none;
+    flex-direction: column;
 
+    justify-content: center;
+
+    min-width: 80px;
+
+}
+
+
+.username {
+
+    color: white;
+
+    font-size: 14px;
+
+    font-weight: 700;
+
+    margin: 0;
+
+    white-space: nowrap;
+
+    max-width: 130px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+}
+
+
+.status {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 6px;
+
+    margin: 4px 0 0;
+
+    color: #22c55e;
+
+    font-size: 11px;
+
+}
+
+
+.status-dot {
+
+    width: 7px;
+
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #22c55e;
+
+    box-shadow:
+        0 0 8px rgba(34,197,94,.7);
+
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.logout-btn,
+.login-btn {
+
+    height: 42px;
+
+    padding: 0 16px;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 7px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    text-decoration: none;
+
+    white-space: nowrap;
 
 }
 
 
 .logout-btn {
 
+    color: white;
 
-padding:8px 12px;
-
-
-font-size:12px;
-
-
-}
-
-
-}
-
-.mobile-menu{
-
-display:none;
-
-font-size:26px;
-
-color:white;
-
-background:none;
-
-border:none;
-
-cursor:pointer;
+    background:
+        linear-gradient(
+            135deg,
+            #ef4444,
+            #dc2626
+        );
 
 }
 
 
-@media(max-width:768px){
+.login-btn {
 
-.mobile-menu{
+    color: white;
 
-display:block;
+    background:
+        linear-gradient(
+            135deg,
+            #2563eb,
+            #7c3aed
+        );
 
 }
+
+
+/* =====================================================
+   MENU MOBILE
+===================================================== */
+
+.mobile-menu {
+
+    display: none;
+
+    width: 42px;
+
+    height: 42px;
+
+    align-items: center;
+
+    justify-content: center;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #1e293b;
+
+    color: white;
+
+    font-size: 23px;
+
+    cursor: pointer;
+
+    flex-shrink: 0;
+
+}
+
+
+/* =====================================================
+   TABLETTE
+===================================================== */
+
+@media (max-width: 1000px) {
+
+    .navbar {
+
+        gap: 14px;
+
+        padding:
+            10px 18px;
+
+    }
+
+    .user-info {
+
+        display: none;
+
+    }
+
+    .logout-text {
+
+        display: none;
+
+    }
+
+    .logout-btn {
+
+        width: 42px;
+
+        padding: 0;
+
+    }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 768px) {
+
+    .navbar {
+
+        min-height: 64px;
+
+        padding:
+            10px 12px;
+
+        gap: 10px;
+
+    }
+
+
+    .mobile-menu {
+
+        display: flex;
+
+    }
+
+
+    .brand {
+
+        gap: 0;
+
+    }
+
+
+    .brand-icon {
+
+        width: 38px;
+
+        height: 38px;
+
+    }
+
+
+    .brand-text {
+
+        display: none;
+
+    }
+
+
+    .search-container {
+
+        order: 3;
+
+        flex-basis: 100%;
+
+        width: 100%;
+
+    }
+
+
+    .navbar {
+
+        flex-wrap: wrap;
+
+    }
+
+
+    .search-box {
+
+        height: 42px;
+
+        border-radius: 12px;
+
+    }
+
+
+    .right-section {
+
+        margin-left: auto;
+
+        gap: 8px;
+
+    }
+
+
+    .avatar {
+
+        width: 38px;
+
+        height: 38px;
+
+        min-width: 38px;
+
+    }
+
+
+    .profile .user-info {
+
+        display: none;
+
+    }
+
+
+    .logout-btn {
+
+        width: 38px;
+
+        height: 38px;
+
+        border-radius: 11px;
+
+        font-size: 16px;
+
+    }
+
+}
+
+
+/* =====================================================
+   PETIT TELEPHONE
+===================================================== */
+
+@media (max-width: 430px) {
+
+    .navbar {
+
+        padding:
+            9px 10px;
+
+    }
+
+
+    .mobile-menu {
+
+        width: 38px;
+
+        height: 38px;
+
+        font-size: 21px;
+
+    }
+
+
+    .brand-icon {
+
+        width: 36px;
+
+        height: 36px;
+
+    }
+
+
+    .right-section {
+
+        gap: 6px;
+
+    }
+
+
+    .search-container {
+
+        flex-basis: 100%;
+
+    }
 
 }
 

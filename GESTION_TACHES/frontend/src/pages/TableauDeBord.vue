@@ -705,17 +705,94 @@ onMounted(() => {
 
 
 
-@media(max-width:900px){
+@media (max-width: 768px) {
 
+    .dashboard {
 
-    .dashboard-columns{
+        width: 100%;
 
-        grid-template-columns:1fr;
+        min-height: calc(100vh - 64px);
+
+        padding: 18px 14px;
+
+        gap: 20px;
+
+        box-sizing: border-box;
 
     }
 
 
-}
+    .dashboard-header {
 
+        width: 100%;
+
+    }
+
+
+    .dashboard-title {
+
+        font-size: 26px;
+
+    }
+
+
+    .dashboard-subtitle {
+
+        font-size: 14px;
+
+        line-height: 1.5;
+
+    }
+
+
+    .stats-grid {
+
+        width: 100%;
+
+        grid-template-columns: 1fr !important;
+
+        gap: 12px;
+
+    }
+
+
+    .dashboard-section {
+
+        width: 100%;
+
+        padding: 16px;
+
+        border-radius: 16px;
+
+        box-sizing: border-box;
+
+    }
+
+
+    .dashboard-section h2 {
+
+        font-size: 18px;
+
+    }
+
+
+    .project-progress-card {
+
+        padding: 14px;
+
+    }
+
+
+    .dashboard-columns {
+
+        width: 100%;
+
+        grid-template-columns: 1fr;
+
+        gap: 16px;
+
+    }
+
+}
 
 </style>            

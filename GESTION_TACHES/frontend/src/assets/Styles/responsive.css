@@ -10,30 +10,40 @@
 
 @media (max-width: 1100px) {
 
-
-    /* Layout */
+    /* =====================
+       LAYOUT
+    ===================== */
 
     .page-container {
+
+        width: 100%;
+
+        box-sizing: border-box;
 
         padding: 20px !important;
 
     }
 
 
-
-    /* Kanban */
+    /* =====================
+       KANBAN
+    ===================== */
 
     .kanban-board {
 
-        grid-template-columns: repeat(2, 1fr) !important;
+        width: 100%;
+
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
 
         gap: 18px;
 
     }
 
 
-
-    /* Header pages */
+    /* =====================
+       HEADER PAGES
+    ===================== */
 
     .kanban-header {
 
@@ -42,18 +52,18 @@
     }
 
 
-
-    /* Dashboard */
+    /* =====================
+       DASHBOARD
+    ===================== */
 
     .stats-grid {
 
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr)) !important;
 
     }
 
-
 }
-
 
 
 /* =========================
@@ -62,74 +72,123 @@
 
 @media (max-width: 768px) {
 
+    /* =====================
+       GLOBAL
+    ===================== */
 
-
+    html,
     body {
+
+        width: 100%;
+
+        max-width: 100%;
 
         overflow-x: hidden;
 
     }
 
 
+    body {
 
-    /* Layout */
+        margin: 0;
+
+    }
+
+
+    /* =====================
+       LAYOUT
+    ===================== */
 
     .app-layout {
 
         display: block !important;
 
-    }
+        width: 100%;
 
+        max-width: 100%;
+
+    }
 
 
     .main-content {
 
         width: 100%;
 
+        max-width: 100%;
+
+        min-width: 0;
+
+        box-sizing: border-box;
+
+        overflow-x: hidden;
+
     }
 
 
-
     .page-container {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        box-sizing: border-box;
 
         padding: 15px !important;
 
     }
 
 
-
-    /* Navbar */
+    /* =====================
+       NAVBAR
+    ===================== */
 
     header {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        box-sizing: border-box;
 
         padding-left: 15px !important;
 
         padding-right: 15px !important;
 
-        gap: 15px;
+        gap: 12px;
 
     }
 
 
-
-    /* Recherche */
+    /* =====================
+       RECHERCHE
+    ===================== */
 
     input {
+
+        max-width: 100%;
+
+        box-sizing: border-box;
 
         font-size: 14px;
 
     }
 
 
-
-    /* Kanban */
+    /* =====================
+       KANBAN
+    ===================== */
 
     .kanban-board {
 
+        width: 100%;
+
+        max-width: 100%;
+
         grid-template-columns: 1fr !important;
 
-    }
+        gap: 16px;
 
+    }
 
 
     .kanban-title {
@@ -139,47 +198,82 @@
     }
 
 
-
     .new-task-btn {
 
-        width:100%;
+        width: 100%;
+
+        box-sizing: border-box;
 
     }
 
 
-
-    /* Colonnes */
+    /* =====================
+       COLONNES
+    ===================== */
 
     .kanban-column {
 
+        width: 100%;
+
+        max-width: 100%;
+
+        min-width: 0;
+
         min-height: auto !important;
+
+        box-sizing: border-box;
 
     }
 
 
+    /* =====================
+       CARTES
+    ===================== */
 
-    /* Dashboard */
+    .task-card {
+
+        width: 100%;
+
+        max-width: 100%;
+
+        min-width: 0;
+
+        box-sizing: border-box;
+
+    }
+
+
+    /* =====================
+       DASHBOARD
+    ===================== */
 
     .stats-grid {
+
+        width: 100%;
 
         grid-template-columns: 1fr !important;
 
     }
 
 
+    .dashboard-columns {
 
-    /* Cartes */
-
-    .task-card {
-
-        width:100%;
+        grid-template-columns: 1fr !important;
 
     }
 
 
+    /* =====================
+       BOUTONS
+    ===================== */
+
+    .actions button {
+
+        min-height: 44px;
+
+    }
 
 }
-
 
 
 /* =========================
@@ -188,29 +282,85 @@
 
 @media (max-width: 480px) {
 
-
+    /* =====================
+       LAYOUT
+    ===================== */
 
     .page-container {
 
-        padding:10px !important;
+        padding: 10px !important;
 
     }
 
 
+    /* =====================
+       TITRES
+    ===================== */
 
     h1 {
 
-        font-size:24px !important;
+        font-size: 24px !important;
 
     }
 
 
+    /* =====================
+       KANBAN
+    ===================== */
+
+    .kanban-page {
+
+        padding: 15px 10px !important;
+
+    }
+
+
+    .kanban-title {
+
+        font-size: 24px !important;
+
+    }
+
+
+    /* =====================
+       DASHBOARD
+    ===================== */
+
+    .dashboard {
+
+        padding: 15px 10px !important;
+
+    }
+
+
+    .dashboard-title {
+
+        font-size: 25px !important;
+
+    }
+
+
+    /* =====================
+       CALENDRIER
+    ===================== */
+
+    .calendar-page {
+
+        padding-left: 10px !important;
+
+        padding-right: 10px !important;
+
+    }
+
+
+    /* =====================
+       BOUTONS
+    ===================== */
 
     button {
 
-        min-height:42px;
+        max-width: 100%;
 
     }
-
 
 }

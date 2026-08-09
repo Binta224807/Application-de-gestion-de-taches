@@ -129,24 +129,16 @@ const allowDrop = (event) => {
     <div class="tasks-container">
 
 
+      
       <TaskCard
-
         v-for="task in columnTasks"
-
         :key="task.id"
-
         :task="task"
-
         @editTask="emit('editTask', $event)"
-
         @deleteTask="emit('deleteTask', $event)"
-
         @archiveTask="emit('archiveTask', $event)"
-
-        
-
-      />
-
+        @moveTask="emit('moveTask', $event)"
+    />
 
       <!-- EMPTY -->
 

@@ -11,6 +11,7 @@ const emit = defineEmits([
   "editTask",
   "deleteTask",
   "archiveTask",
+  "moveTask",
 ]);
 
 
@@ -36,10 +37,7 @@ const startDrag = (event) => {
 
 const editTask = () => {
 
-  emit(
-    "editTask",
-    props.task
-  );
+  emit("editTask", props.task);
 
 };
 
@@ -50,10 +48,7 @@ const editTask = () => {
 
 const deleteTask = () => {
 
-  emit(
-    "deleteTask",
-    props.task
-  );
+  emit("deleteTask", props.task);
 
 };
 
@@ -64,12 +59,31 @@ const deleteTask = () => {
 
 const archiveTask = () => {
 
-  emit(
-    "archiveTask",
-    props.task
-  );
+  emit("archiveTask", props.task);
 
 };
+
+
+// ===============================
+// DÉPLACER
+// ===============================
+
+const moveTask = (newStatus) => {
+
+  // Sécurité : ne rien faire
+  // si on clique sur le statut actuel
+
+  if (props.task.status === newStatus) {
+    return;
+  }
+
+  emit("moveTask", {
+    task: props.task,
+    newStatus: newStatus,
+  });
+
+};
+
 
 </script>
 
@@ -91,7 +105,6 @@ const archiveTask = () => {
       <h3>
         {{ task.title }}
       </h3>
-
 
       <span
         class="badge"
@@ -120,9 +133,7 @@ const archiveTask = () => {
     <!-- ========================= -->
 
     <p class="task-id">
-
       ID : {{ task.id }}
-
     </p>
 
 
@@ -131,9 +142,7 @@ const archiveTask = () => {
     <!-- ========================= -->
 
     <p class="description">
-
       {{ task.description || "Aucune description" }}
-
     </p>
 
 
@@ -148,28 +157,22 @@ const archiveTask = () => {
         {{ task.due_date || "Pas de date" }}
       </span>
 
-
       <span>
         📂
         {{ task.project_name || "Sans projet" }}
       </span>
-
 
       <span>
         🏷️
         {{ task.category_name || "Sans catégorie" }}
       </span>
 
-
       <span>
         ⏱️
         {{ task.estimated_duration || 0 }} min
       </span>
 
-
-      <span
-        v-if="task.due_time"
-      >
+      <span v-if="task.due_time">
         🕒
         {{ task.due_time }}
       </span>
@@ -189,42 +192,88 @@ const archiveTask = () => {
         class="edit"
         @click="editTask"
       >
-
         ✏️
         <span>Mod</span>
-
       </button>
 
 
-      <!-- ========================= -->
-      <!-- TERMINÉE = ARCHIVER -->
-      <!-- ========================= -->
+      <!-- SUPPRIMER -->
+      <!-- Visible seulement si la tâche -->
+      <!-- n'est PAS terminée -->
+
+      <button
+        v-if="task.status !== 'done'"
+        class="delete"
+        @click="deleteTask"
+      >
+        🗑️
+        <span>Sup</span>
+      </button>
+
+
+      <!-- ARCHIVER -->
+      <!-- Visible seulement si terminée -->
 
       <button
         v-if="task.status === 'done'"
         class="archive"
         @click="archiveTask"
       >
-
         📦
         <span>Arch</span>
-
       </button>
 
 
       <!-- ========================= -->
-      <!-- TODO / EN COURS = SUPPRIMER -->
+      <!-- DÉPLACEMENT -->
       <!-- ========================= -->
 
+
+      <!-- À FAIRE → EN COURS -->
+
       <button
-        v-else
-        class="delete"
-        @click="deleteTask"
+        v-if="task.status === 'todo'"
+        class="progress"
+        @click="moveTask('in_progress')"
       >
+        →
+        <span>En cours</span>
+      </button>
 
-        🗑️
-        <span>Sup</span>
 
+      <!-- EN COURS → À FAIRE -->
+
+      <button
+        v-if="task.status === 'in_progress'"
+        class="todo"
+        @click="moveTask('todo')"
+      >
+        ←
+        <span>À faire</span>
+      </button>
+
+
+      <!-- EN COURS → TERMINÉ -->
+
+      <button
+        v-if="task.status === 'in_progress'"
+        class="done"
+        @click="moveTask('done')"
+      >
+        ✓
+        <span>Terminé</span>
+      </button>
+
+
+      <!-- TERMINÉ → EN COURS -->
+
+      <button
+        v-if="task.status === 'done'"
+        class="progress"
+        @click="moveTask('in_progress')"
+      >
+        ←
+        <span>En cours</span>
       </button>
 
     </div>
@@ -243,7 +292,6 @@ const archiveTask = () => {
 .task-card {
 
   width: 100%;
-
   box-sizing: border-box;
 
   background: #111827;
@@ -255,7 +303,6 @@ const archiveTask = () => {
   padding: 18px;
 
   display: flex;
-
   flex-direction: column;
 
   gap: 14px;
@@ -345,30 +392,22 @@ const archiveTask = () => {
 
 
 .badge.low {
-
   background: #22c55e;
-
 }
 
 
 .badge.medium {
-
   background: #f59e0b;
-
 }
 
 
 .badge.high {
-
   background: #ef4444;
-
 }
 
 
 .badge.urgent {
-
   background: #dc2626;
-
 }
 
 
@@ -433,16 +472,18 @@ const archiveTask = () => {
 
 
 /* =========================================
-   ACTIONS
+   BOUTONS
 ========================================= */
 
 .actions {
 
   display: flex;
 
+  flex-wrap: nowrap;
+
   width: 100%;
 
-  gap: 8px;
+  gap: 6px;
 
   margin-top: 8px;
 
@@ -455,21 +496,21 @@ const archiveTask = () => {
 
   min-width: 0;
 
-  min-height: 38px;
+  min-height: 36px;
 
-  padding: 8px 10px;
+  padding: 7px 5px;
 
   border: none;
 
-  border-radius: 10px;
+  border-radius: 9px;
 
-  font-size: 12px;
+  font-size: 11px;
 
   font-weight: 600;
 
   cursor: pointer;
 
-  transition: .25s;
+  transition: .2s;
 
   color: white;
 
@@ -478,57 +519,70 @@ const archiveTask = () => {
 }
 
 
-/* =========================================
-   MODIFIER
-========================================= */
+.actions button:hover {
+
+  transform: translateY(-2px);
+
+}
+
 
 .edit {
-
   background: #2563eb;
-
 }
 
 
 .edit:hover {
-
   background: #1d4ed8;
-
 }
 
 
-/* =========================================
-   SUPPRIMER
-========================================= */
-
 .delete {
-
   background: #dc2626;
-
 }
 
 
 .delete:hover {
-
   background: #b91c1c;
-
 }
 
 
-/* =========================================
-   ARCHIVER
-========================================= */
-
 .archive {
-
   background: #16a34a;
-
 }
 
 
 .archive:hover {
-
   background: #15803d;
+}
 
+
+.progress {
+  background: #d97706;
+}
+
+
+.progress:hover {
+  background: #b45309;
+}
+
+
+.todo {
+  background: #2563eb;
+}
+
+
+.todo:hover {
+  background: #1d4ed8;
+}
+
+
+.done {
+  background: #16a34a;
+}
+
+
+.done:hover {
+  background: #15803d;
 }
 
 
@@ -544,17 +598,12 @@ const archiveTask = () => {
 
     border-radius: 16px;
 
-    cursor: grab;
-
   }
 
 
   .task-card:hover {
 
     transform: none;
-
-    box-shadow:
-      0 6px 18px rgba(0,0,0,.25);
 
   }
 
@@ -577,7 +626,7 @@ const archiveTask = () => {
 
   .actions {
 
-    gap: 7px;
+    gap: 5px;
 
   }
 
@@ -586,9 +635,9 @@ const archiveTask = () => {
 
     min-height: 40px;
 
-    padding: 8px 7px;
+    padding: 8px 4px;
 
-    font-size: 11px;
+    font-size: 10px;
 
   }
 
@@ -626,7 +675,9 @@ const archiveTask = () => {
 
   .actions {
 
-    flex-direction: row;
+    display: grid;
+
+    grid-template-columns: repeat(2, 1fr);
 
     gap: 6px;
 
@@ -635,11 +686,9 @@ const archiveTask = () => {
 
   .actions button {
 
-    flex: 1;
+    width: 100%;
 
     min-height: 40px;
-
-    padding: 8px 5px;
 
     font-size: 11px;
 

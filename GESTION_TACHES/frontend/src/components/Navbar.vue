@@ -59,6 +59,25 @@
     <!-- PARTIE DROITE -->
     <div class="right-section">
 
+        <!-- NOTIFICATIONS -->
+        <RouterLink
+            v-if="isAuthenticated"
+            to="/notifications"
+            class="notification-link"
+        >
+
+            <span class="notification-icon">🔔</span>
+
+            <span
+                v-if="unreadCount > 0"
+                class="notification-badge"
+            >
+                {{ unreadCount > 99 ? "99+" : unreadCount }}
+            </span>
+
+        </RouterLink>
+
+
         <!-- PROFIL -->
         <div
             v-if="isAuthenticated"
@@ -130,6 +149,8 @@ import { useRouter } from "vue-router";
 
 import { useSearch } from "../components/useSearch";
 
+import api from "../services/api";
+
 
 const router = useRouter();
 
@@ -145,6 +166,8 @@ const search = ref("");
 const username = ref("Utilisateur");
 
 const isAuthenticated = ref(false);
+
+const unreadCount = ref(0);
 
 
 // =====================================================
@@ -171,12 +194,43 @@ const updateUser = () => {
 
 
 // =====================================================
+// NOTIFICATIONS NON LUES
+// =====================================================
+
+const loadUnreadCount = async () => {
+
+    const token =
+        localStorage.getItem("access")
+        || localStorage.getItem("access_token");
+
+    if (!token) return;
+
+    try {
+
+        const response = await api.get("notifications/unread/");
+
+        unreadCount.value = response.data.length;
+
+    }
+
+    catch (error) {
+
+        console.error("Erreur notifications :", error);
+
+    }
+
+};
+
+
+// =====================================================
 // INITIAL
 // =====================================================
 
 onMounted(() => {
 
     updateUser();
+
+    loadUnreadCount();
 
     window.addEventListener(
         "storage",
@@ -239,10 +293,15 @@ const logout = () => {
     localStorage.removeItem("refresh_token");
 
     localStorage.removeItem("username");
+    localStorage.removeItem("is_ceo");
+    localStorage.removeItem("company_id");
+    localStorage.removeItem("company_name");
 
     isAuthenticated.value = false;
 
     username.value = "Utilisateur";
+
+    unreadCount.value = 0;
 
     router.push("/login");
 
@@ -677,6 +736,74 @@ const logout = () => {
             #2563eb,
             #7c3aed
         );
+
+}
+
+
+/* =====================================================
+   NOTIFICATIONS
+===================================================== */
+
+.notification-link {
+
+    position: relative;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #1e293b;
+    border-radius: 12px;
+
+    text-decoration: none;
+
+    transition: .2s;
+
+}
+
+
+.notification-link:hover {
+
+    background: #334155;
+
+}
+
+
+.notification-icon {
+
+    font-size: 20px;
+
+}
+
+
+.notification-badge {
+
+    position: absolute;
+
+    top: -6px;
+    right: -6px;
+
+    min-width: 20px;
+    height: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 0 6px;
+
+    background: #ef4444;
+    color: white;
+
+    border-radius: 999px;
+
+    font-size: 11px;
+    font-weight: 800;
+
+    box-sizing: border-box;
 
 }
 

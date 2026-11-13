@@ -1,5 +1,9 @@
 <script setup>
 
+import { computed } from "vue";
+import { useRouter } from "vue-router";
+import { formatDuration } from "../services/formatDuration.js";
+
 const props = defineProps({
   task: {
     type: Object,
@@ -10,30 +14,53 @@ const props = defineProps({
 const emit = defineEmits([
   "editTask",
   "deleteTask",
-  "archiveTask",
-  "moveTask",
 ]);
 
+const router = useRouter();
 
-// ===============================
-// GLISSER-DÉPOSER
-// ===============================
+const priorityLabel = computed(() => {
 
-const startDrag = (event) => {
+  const labels = {
+    low: "Faible",
+    medium: "Moyenne",
+    high: "Élevée",
+    urgent: "Urgente",
+  };
 
-  event.dataTransfer.effectAllowed = "move";
+  return labels[props.task.priority] || props.task.priority;
 
-  event.dataTransfer.setData(
-    "taskId",
-    String(props.task.id)
-  );
+});
+
+const statusLabel = computed(() => {
+
+  const labels = {
+    todo: "À faire",
+    in_progress: "En cours",
+    review: "À vérifier",
+    done: "Terminée",
+  };
+
+  return labels[props.task.status] || props.task.status;
+
+});
+
+const assignedName = computed(() => {
+
+  if (props.task.assigned_to && props.task.assigned_to.username) {
+
+    return props.task.assigned_to.username;
+
+  }
+
+  return "Non assigné";
+
+});
+
+const goToDetail = () => {
+
+  router.push(`/tasks/${props.task.id}`);
 
 };
-
-
-// ===============================
-// MODIFIER
-// ===============================
 
 const editTask = () => {
 
@@ -41,239 +68,79 @@ const editTask = () => {
 
 };
 
-
-// ===============================
-// SUPPRIMER
-// ===============================
-
 const deleteTask = () => {
 
   emit("deleteTask", props.task);
 
 };
 
-
-// ===============================
-// ARCHIVER
-// ===============================
-
-const archiveTask = () => {
-
-  emit("archiveTask", props.task);
-
-};
-
-
-// ===============================
-// DÉPLACER
-// ===============================
-
-const moveTask = (newStatus) => {
-
-  // Sécurité : ne rien faire
-  // si on clique sur le statut actuel
-
-  if (props.task.status === newStatus) {
-    return;
-  }
-
-  emit("moveTask", {
-    task: props.task,
-    newStatus: newStatus,
-  });
-
-};
-
-
 </script>
 
 
 <template>
 
-  <div
-    class="task-card"
-    draggable="true"
-    @dragstart="startDrag"
-  >
+  <div class="task-row">
 
-    <!-- ========================= -->
-    <!-- HEADER -->
-    <!-- ========================= -->
+    <!-- COLONNE GAUCHE : TITRE + DESCRIPTION -->
 
-    <div class="card-header">
+    <div class="task-main">
 
-      <h3>
+      <h3 class="task-title">
         {{ task.title }}
       </h3>
 
+      <p class="task-description">
+        {{ task.description || "Aucune description" }}
+      </p>
+
+    </div>
+
+
+    <!-- COLONNE CENTRALE : INFOS -->
+
+    <div class="task-meta">
+
       <span
-        class="badge"
+        class="badge status-badge"
+        :class="task.status"
+      >
+        {{ statusLabel }}
+      </span>
+
+      <span
+        class="badge priority-badge"
         :class="task.priority"
       >
+        {{ priorityLabel }}
+      </span>
 
-        {{
-          task.priority === "low"
-            ? "Faible"
-            : task.priority === "medium"
-            ? "Moyenne"
-            : task.priority === "high"
-            ? "Élevée"
-            : task.priority === "urgent"
-            ? "Urgente"
-            : task.priority
-        }}
+      <span class="meta-item">
+        👤 {{ assignedName }}
+      </span>
 
+      <span class="meta-item">
+        ⏱️ {{ formatDuration(task.estimated_duration) }}
+      </span>
+
+      <span
+        v-if="task.due_date"
+        class="meta-item"
+      >
+        📅 {{ task.due_date }}
       </span>
 
     </div>
 
 
-    <!-- ========================= -->
-    <!-- ID -->
-    <!-- ========================= -->
+    <!-- COLONNE DROITE : ACTION -->
 
-    <p class="task-id">
-      ID : {{ task.id }}
-    </p>
-
-
-    <!-- ========================= -->
-    <!-- DESCRIPTION -->
-    <!-- ========================= -->
-
-    <p class="description">
-      {{ task.description || "Aucune description" }}
-    </p>
-
-
-    <!-- ========================= -->
-    <!-- INFORMATIONS -->
-    <!-- ========================= -->
-
-    <div class="card-infos">
-
-      <span>
-        📅
-        {{ task.due_date || "Pas de date" }}
-      </span>
-
-      <span>
-        📂
-        {{ task.project_name || "Sans projet" }}
-      </span>
-
-      <span>
-        🏷️
-        {{ task.category_name || "Sans catégorie" }}
-      </span>
-
-      <span>
-        ⏱️
-        {{ task.estimated_duration || 0 }} min
-      </span>
-
-      <span v-if="task.due_time">
-        🕒
-        {{ task.due_time }}
-      </span>
-
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- ACTIONS -->
-    <!-- ========================= -->
-
-    <div class="actions">
-
-      <!-- MODIFIER -->
+    <div class="task-actions">
 
       <button
-        class="edit"
-        @click="editTask"
+        class="btn-detail"
+        @click="goToDetail"
       >
-        ✏️
-        <span>Mod</span>
-      </button>
-
-
-      <!-- SUPPRIMER -->
-      <!-- Visible seulement si la tâche -->
-      <!-- n'est PAS terminée -->
-
-      <button
-        v-if="task.status !== 'done'"
-        class="delete"
-        @click="deleteTask"
-      >
-        🗑️
-        <span>Sup</span>
-      </button>
-
-
-      <!-- ARCHIVER -->
-      <!-- Visible seulement si terminée -->
-
-      <button
-        v-if="task.status === 'done'"
-        class="archive"
-        @click="archiveTask"
-      >
-        📦
-        <span>Arch</span>
-      </button>
-
-
-      <!-- ========================= -->
-      <!-- DÉPLACEMENT -->
-      <!-- ========================= -->
-
-
-      <!-- À FAIRE → EN COURS -->
-
-      <button
-        v-if="task.status === 'todo'"
-        class="progress"
-        @click="moveTask('in_progress')"
-      >
-        →
-        <span>En cours</span>
-      </button>
-
-
-      <!-- EN COURS → À FAIRE -->
-
-      <button
-        v-if="task.status === 'in_progress'"
-        class="todo"
-        @click="moveTask('todo')"
-      >
-        ←
-        <span>À faire</span>
-      </button>
-
-
-      <!-- EN COURS → TERMINÉ -->
-
-      <button
-        v-if="task.status === 'in_progress'"
-        class="done"
-        @click="moveTask('done')"
-      >
-        ✓
-        <span>Terminé</span>
-      </button>
-
-
-      <!-- TERMINÉ → EN COURS -->
-
-      <button
-        v-if="task.status === 'done'"
-        class="progress"
-        @click="moveTask('in_progress')"
-      >
-        ←
-        <span>En cours</span>
+        Détails
       </button>
 
     </div>
@@ -285,412 +152,255 @@ const moveTask = (newStatus) => {
 
 <style scoped>
 
-/* =========================================
-   CARTE
-========================================= */
-
-.task-card {
+.task-row {
 
   width: 100%;
   box-sizing: border-box;
 
   background: #111827;
 
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 
-  border-radius: 18px;
+  border-radius: 16px;
 
-  padding: 18px;
+  padding: 18px 20px;
 
-  display: flex;
-  flex-direction: column;
-
-  gap: 14px;
-
-  cursor: grab;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 20px;
 
   transition: .25s;
 
-  box-shadow:
-    0 6px 18px rgba(0,0,0,.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 
 }
 
 
-.task-card:hover {
-
-  transform: translateY(-4px);
+.task-row:hover {
 
   border-color: #2563eb;
 
-  box-shadow:
-    0 10px 25px rgba(37,99,235,.25);
-
-}
-
-
-.task-card:active {
-
-  cursor: grabbing;
-
-}
-
-
-/* =========================================
-   HEADER
-========================================= */
-
-.card-header {
-
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: flex-start;
-
-  gap: 12px;
-
-}
-
-
-.card-header h3 {
-
-  font-size: 18px;
-
-  font-weight: 700;
-
-  color: white;
-
-  margin: 0;
-
-  word-break: break-word;
-
-}
-
-
-/* =========================================
-   PRIORITÉ
-========================================= */
-
-.badge {
-
-  flex-shrink: 0;
-
-  padding: 5px 10px;
-
-  border-radius: 30px;
-
-  font-size: 10px;
-
-  font-weight: bold;
-
-  text-transform: uppercase;
-
-  color: white;
-
-}
-
-
-.badge.low {
-  background: #22c55e;
-}
-
-
-.badge.medium {
-  background: #f59e0b;
-}
-
-
-.badge.high {
-  background: #ef4444;
-}
-
-
-.badge.urgent {
-  background: #dc2626;
-}
-
-
-/* =========================================
-   ID
-========================================= */
-
-.task-id {
-
-  color: #facc15;
-
-  font-size: 12px;
-
-  margin: 0;
-
-}
-
-
-/* =========================================
-   DESCRIPTION
-========================================= */
-
-.description {
-
-  color: #94a3b8;
-
-  font-size: 14px;
-
-  line-height: 1.6;
-
-  margin: 0;
-
-  overflow-wrap: anywhere;
-
-}
-
-
-/* =========================================
-   INFORMATIONS
-========================================= */
-
-.card-infos {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 7px;
-
-  font-size: 13px;
-
-  color: #cbd5e1;
-
-}
-
-
-.card-infos span {
-
-  overflow-wrap: anywhere;
-
-}
-
-
-/* =========================================
-   BOUTONS
-========================================= */
-
-.actions {
-
-  display: flex;
-
-  flex-wrap: nowrap;
-
-  width: 100%;
-
-  gap: 6px;
-
-  margin-top: 8px;
-
-}
-
-
-.actions button {
-
-  flex: 1;
-
-  min-width: 0;
-
-  min-height: 36px;
-
-  padding: 7px 5px;
-
-  border: none;
-
-  border-radius: 9px;
-
-  font-size: 11px;
-
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: .2s;
-
-  color: white;
-
-  white-space: nowrap;
-
-}
-
-
-.actions button:hover {
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
 
   transform: translateY(-2px);
 
 }
 
 
-.edit {
-  background: #2563eb;
+.task-main {
+
+  min-width: 0;
+
+  overflow: hidden;
+
 }
 
 
-.edit:hover {
-  background: #1d4ed8;
+.task-title {
+
+  font-size: 17px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 6px 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
 }
 
 
-.delete {
+.task-description {
+
+  color: #94a3b8;
+  font-size: 13px;
+  margin: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+}
+
+
+.task-meta {
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+}
+
+
+.badge {
+
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: white;
+
+}
+
+
+.priority-badge.low {
+  background: #22c55e;
+}
+
+.priority-badge.medium {
+  background: #f59e0b;
+}
+
+.priority-badge.high {
+  background: #ef4444;
+}
+
+.priority-badge.urgent {
   background: #dc2626;
 }
 
 
-.delete:hover {
-  background: #b91c1c;
+.status-badge.todo {
+  background: #3b82f6;
 }
 
-
-.archive {
-  background: #16a34a;
-}
-
-
-.archive:hover {
-  background: #15803d;
-}
-
-
-.progress {
+.status-badge.in_progress {
   background: #d97706;
 }
 
-
-.progress:hover {
-  background: #b45309;
+.status-badge.review {
+  background: #8b5cf6;
 }
 
-
-.todo {
-  background: #2563eb;
-}
-
-
-.todo:hover {
-  background: #1d4ed8;
-}
-
-
-.done {
+.status-badge.done {
   background: #16a34a;
 }
 
 
-.done:hover {
-  background: #15803d;
+.meta-item {
+
+  color: #cbd5e1;
+  font-size: 13px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+
+  white-space: nowrap;
+
 }
 
 
-/* =========================================
-   MOBILE
-========================================= */
+.task-actions {
 
-@media (max-width: 768px) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-  .task-card {
+}
 
+
+.btn-detail {
+
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: .2s;
+
+  white-space: nowrap;
+
+}
+
+
+.btn-detail:hover {
+
+  background: #1d4ed8;
+  transform: translateY(-1px);
+
+}
+
+
+/* TABLETTE */
+
+@media (max-width: 1024px) {
+
+  .task-row {
+
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+
+  }
+
+  .task-actions {
+
+    grid-column: 2;
+    grid-row: 1;
+
+  }
+
+  .task-meta {
+
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+
+  }
+
+}
+
+
+/* MOBILE */
+
+@media (max-width: 640px) {
+
+  .task-row {
+
+    grid-template-columns: 1fr;
+    gap: 14px;
     padding: 16px;
 
-    border-radius: 16px;
+  }
+
+  .task-title {
+
+    font-size: 16px;
+    white-space: normal;
 
   }
 
+  .task-description {
 
-  .task-card:hover {
-
-    transform: none;
-
-  }
-
-
-  .card-header h3 {
-
-    font-size: 17px;
+    white-space: normal;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 
   }
 
+  .task-meta {
 
-  .badge {
-
-    font-size: 9px;
-
-    padding: 5px 8px;
-
-  }
-
-
-  .actions {
-
-    gap: 5px;
-
-  }
-
-
-  .actions button {
-
-    min-height: 40px;
-
-    padding: 8px 4px;
-
-    font-size: 10px;
-
-  }
-
-}
-
-
-/* =========================================
-   PETIT TÉLÉPHONE
-========================================= */
-
-@media (max-width: 480px) {
-
-  .task-card {
-
-    padding: 14px;
-
-  }
-
-
-  .card-header {
-
-    flex-direction: column;
-
+    flex-wrap: wrap;
     gap: 8px;
 
   }
 
-
-  .badge {
-
-    align-self: flex-start;
-
-  }
-
-
-  .actions {
-
-    display: grid;
-
-    grid-template-columns: repeat(2, 1fr);
-
-    gap: 6px;
-
-  }
-
-
-  .actions button {
+  .task-actions {
 
     width: 100%;
 
-    min-height: 40px;
+  }
 
-    font-size: 11px;
+  .btn-detail {
+
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
 
   }
 

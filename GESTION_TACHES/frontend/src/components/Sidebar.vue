@@ -1,7 +1,6 @@
 <template>
 
-  
-  <aside 
+  <aside
     class="sidebar"
     :class="{open: props.open}"
     @click="emit('close')"
@@ -10,25 +9,25 @@
 
     <div class="brand">
 
-  <h1>
-    NOVA TASKS
-  </h1>
+      <h1>
+        NOVA TASKS
+      </h1>
 
-  <p>
-    Organisez votre quotidien
-  </p>
+      <p>
+        Pilotage d'entreprise
+      </p>
 
-  <span class="brand-signature">
-    by Clever
-  </span>
+      <span class="brand-signature">
+        by Clever
+      </span>
 
-  </div>
+    </div>
 
 
 
     <!-- NAVIGATION -->
 
-    <nav class="menu">
+    <nav class="menu" @click.stop>
 
 
       <RouterLink
@@ -41,13 +40,12 @@
 
 
       <RouterLink
-        to="/kanban"
+        to="/tasks"
         class="menu-item"
       >
         <span class="icon">📋</span>
         <span>Gestion tâches</span>
       </RouterLink>
-      
 
 
       <RouterLink
@@ -59,7 +57,6 @@
       </RouterLink>
 
 
-
       <RouterLink
         to="/statistics"
         class="menu-item"
@@ -69,13 +66,31 @@
       </RouterLink>
 
 
-
       <RouterLink
         to="/archives"
         class="menu-item"
       >
-        <span class="icon">📦</span>
-        <span>Archives</span>
+        <span class="icon">�️</span>
+        <span>Corbeille</span>
+      </RouterLink>
+
+
+      <RouterLink
+        v-if="isCEO"
+        to="/company"
+        class="menu-item"
+      >
+        <span class="icon">🏢</span>
+        <span>Mon entreprise</span>
+      </RouterLink>
+
+
+      <RouterLink
+        to="/notifications"
+        class="menu-item"
+      >
+        <span class="icon">🔔</span>
+        <span>Notifications</span>
       </RouterLink>
 
 
@@ -106,7 +121,7 @@
         <p class="status">
 
           <span></span>
-          Connecté
+          {{ roleLabel }}
 
         </p>
 
@@ -125,22 +140,28 @@
 
 
 <script setup>
-const props = defineProps({
-
-open:{
-    type:Boolean,
-    default:false
-}
-
-});
 import { computed } from "vue";
 
+const props = defineProps({
+
+  open: {
+    type: Boolean,
+    default: false
+  }
+
+});
 
 const username =
-localStorage.getItem("username")
-|| "Utilisateur";
+  localStorage.getItem("username")
+  || "Utilisateur";
 
+const isCEO = localStorage.getItem("is_ceo") === "1";
 
+const roleLabel = computed(() => {
+
+  return isCEO ? "PDG" : "Employé";
+
+});
 
 const initial = computed(() => {
 
@@ -151,7 +172,7 @@ const initial = computed(() => {
 });
 
 const emit = defineEmits([
-    "close"
+  "close"
 ]);
 </script>
 
@@ -436,6 +457,7 @@ const emit = defineEmits([
 
 
 }
+
 
 @media (min-width:769px) and (max-width:900px){
 

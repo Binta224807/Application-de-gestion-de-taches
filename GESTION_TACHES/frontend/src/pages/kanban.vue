@@ -1,43 +1,58 @@
 <template>
 
-<div class="kanban-page">
+<div class="tasks-page">
 
     <!-- ============================= -->
     <!-- HEADER -->
     <!-- ============================= -->
 
-    <div class="kanban-header">
+    <div class="tasks-header">
 
         <div>
-
-            <h1 class="kanban-title">
-
-                Kanban
-
+            <h1 class="tasks-title">
+                Gestion des tâches
             </h1>
 
-            <p class="kanban-subtitle">
-
-                Organisez vos tâches par glisser-déposer.
-
+            <p class="tasks-subtitle">
+                Liste des tâches de {{ companyName }}
             </p>
-
         </div>
 
         <button
-
+            v-if="isCEO"
             class="new-task-btn"
-
             @click="openTaskForm"
-
         >
-
             + Nouvelle tâche
-
         </button>
 
     </div>
 
+
+    <!-- ============================= -->
+    <!-- FILTRES -->
+    <!-- ============================= -->
+
+    <div class="filters">
+
+        <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Rechercher une tâche..."
+            class="search-input"
+        />
+
+        <select
+            v-model="statusFilter"
+            class="filter-select"
+        >
+            <option value="">Tous les statuts</option>
+            <option value="todo">À faire</option>
+            <option value="in_progress">En cours</option>
+            <option value="done">Terminées</option>
+        </select>
+
+    </div>
 
 
     <!-- ============================= -->
@@ -45,124 +60,60 @@
     <!-- ============================= -->
 
     <div
-
         v-if="loading"
-
         class="loading-container"
-
     >
-
         Chargement...
-
     </div>
 
 
-
     <!-- ============================= -->
-    <!-- KANBAN -->
+    <!-- LISTE -->
     <!-- ============================= -->
 
     <div
-
         v-else
-
-        class="kanban-board"
-
+        class="tasks-list"
     >
-    <!-- À FAIRE -->
-        <KanbanColumn
-            title="À faire"
-            status="todo"
-            :tasks="todoTasks"
-            @taskMoved="moveTask"
-            @moveTask="moveTaskByButton"
+
+        <TaskCard
+            v-for="task in filteredTasks"
+            :key="task.id"
+            :task="task"
             @editTask="editTask"
             @deleteTask="deleteTask"
-            @archiveTask="openArchiveModal"
         />
 
-        <!-- EN COURS -->
-        <KanbanColumn
-            title="En cours"
-            status="in_progress"
-            :tasks="inProgressTasks"
-            @taskMoved="moveTask"
-            @moveTask="moveTaskByButton"
-            @editTask="editTask"
-            @deleteTask="deleteTask"
-            @archiveTask="openArchiveModal"
-        />
+    </div>
 
-        <!-- TERMINÉE -->
-        <KanbanColumn
-            title="Terminée"
-            status="done"
-            :tasks="doneTasks"
-            @taskMoved="moveTask"
-            @moveTask="moveTaskByButton"
-            @editTask="editTask"
-            @deleteTask="deleteTask"
-            @archiveTask="openArchiveModal"
-        />
-                        
-            </div>
-            <TaskForm
-            v-if="showTaskForm"
-            :task="selectedTask"
-            @close="closeTaskForm"
-            @saved="reloadTasks"
-        />
 
     <!-- ============================= -->
     <!-- EMPTY -->
     <!-- ============================= -->
 
     <div
-
-        v-if=" 
-
-            !loading &&
-
-            todoTasks.length===0 &&
-
-            inProgressTasks.length===0 &&
-
-            doneTasks.length===0
-
-        "
-
+        v-if="!loading && filteredTasks.length === 0"
         class="empty-state"
-
     >
 
         <h2>
-
             Aucune tâche
-
         </h2>
 
         <p>
-
-            Cliquez sur
-
-            <strong>
-
-                Nouvelle tâche
-
-            </strong>
-
-            pour commencer.
-
+            {{ isCEO ? "Cliquez sur Nouvelle tâche pour commencer." : "Aucune tâche ne vous est assignée pour le moment." }}
         </p>
 
     </div>
-    <ArchiveModal
-        v-if="showArchiveModal && taskToArchive"
-        :task="taskToArchive"
-        @close="closeArchiveModal"
-        @confirmArchive="confirmArchive"
-        />
-    
+
+
+    <TaskForm
+        v-if="showTaskForm"
+        :task="selectedTask"
+        @close="closeTaskForm"
+        @saved="reloadTasks"
+    />
+
 </div>
 
 </template>
@@ -170,72 +121,49 @@
 <script setup>
 
 import { ref, computed, onMounted } from "vue";
-
 import api from "../services/api";
 
-import KanbanColumn from "../components/KanbanColumn.vue";
-import Taskcard from "../components/TaskCard.vue";
+import TaskCard from "../components/TaskCard.vue";
 import TaskForm from "../components/TaskForm.vue";
-import ArchiveModal from "../components/ArchiveModal.vue";
-import { useSearch } from "../components/useSearch";
 
 
-const { searchQuery } = useSearch();
 // =======================================================
 // ETAT
 // =======================================================
 
-
 const loading = ref(true);
 const tasks = ref([]);
 
-const selectedTask = ref(null)
+const selectedTask = ref(null);
 const showTaskForm = ref(false);
 
+const searchQuery = ref("");
+const statusFilter = ref("");
 
-const showArchiveModal = ref(false);
-const taskToArchive = ref(null);
-
-
-const openArchiveModal = (task) => {
-  taskToArchive.value = task;
-  showArchiveModal.value = true;
-};
+const isCEO = ref(localStorage.getItem("is_ceo") === "1");
+const companyName = ref(localStorage.getItem("company_name") || "votre entreprise");
 
 
 // =======================================================
-// COLONNES
+// FILTRES
 // =======================================================
 
-const todoTasks = computed(() =>
-    tasks.value.filter(task =>
-        task.status === "todo" &&
-        task.title
-        .toLowerCase()
-        .includes(searchQuery.value.toLowerCase())
-    )
-);
+const filteredTasks = computed(() => {
 
-const inProgressTasks = computed(() =>
-    tasks.value.filter(task =>
-        task.status === "in_progress" &&
-        task.title
-        .toLowerCase()
-        .includes(searchQuery.value.toLowerCase())
-    )
-);
+    return tasks.value.filter(task => {
 
+        const matchesSearch = task.title
+            .toLowerCase()
+            .includes(searchQuery.value.toLowerCase());
 
+        const matchesStatus = statusFilter.value === ""
+            || task.status === statusFilter.value;
 
-const doneTasks = computed(() =>
-    tasks.value.filter(task =>
-        task.status === "done" &&
-        task.title
-        .toLowerCase()
-        .includes(searchQuery.value.toLowerCase())
-    )
-);
+        return matchesSearch && matchesStatus;
 
+    });
+
+});
 
 
 // =======================================================
@@ -248,10 +176,8 @@ const loadTasks = async () => {
 
         loading.value = true;
 
-        const response = await api.get(
-            "tasks/"
-        );
-        console.log("TACHES API :", response.data);
+        const response = await api.get("tasks/");
+
         tasks.value = response.data;
 
     }
@@ -273,11 +199,6 @@ const loadTasks = async () => {
 };
 
 
-
-// =======================================================
-// RECHARGER
-// =======================================================
-
 const reloadTasks = async () => {
 
     await loadTasks();
@@ -285,189 +206,47 @@ const reloadTasks = async () => {
 };
 
 
-
 // =======================================================
-// CREATION
+// CREATION / MODIFICATION
 // =======================================================
 
 const openTaskForm = () => {
 
     selectedTask.value = null;
-
     showTaskForm.value = true;
 
 };
 
-
-
-// =======================================================
-// MODIFICATION
-// =======================================================
 
 const editTask = (task) => {
 
     selectedTask.value = task;
-
     showTaskForm.value = true;
 
 };
 
 
-
-// =======================================================
-// FERMER
-// =======================================================
-
 const closeTaskForm = () => {
 
     selectedTask.value = null;
-
     showTaskForm.value = false;
 
 };
 
-const moveTask = async ({ taskId, newStatus }) => {
-
-    try {
-
-        await api.patch(
-            `tasks/${taskId}/`,
-            {
-                status: newStatus
-            }
-        );
-
-
-        await loadTasks();
-
-
-        // =============================
-        // Si tâche terminée
-        // =============================
-
-       
-
-    }
-
-    catch(error){
-
-        console.error(error);
-
-    }
-
-};
-
-const moveTaskByButton = async ({ task, newStatus }) => {
-
-    // Évite de faire une requête
-    // si la tâche est déjà dans cette colonne
-
-    if (task.status === newStatus) {
-        return;
-    }
-
-    try {
-
-        await api.patch(
-
-            `tasks/${task.id}/`,
-
-            {
-                status: newStatus
-            }
-
-        );
-
-        await loadTasks();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "Erreur déplacement tâche :",
-            error.response?.data || error
-        );
-
-    }
-
-};
-// =======================================================
-// ARCHIVER
-// =======================================================
-
-const archiveTask = async (task, duration="30_days") => {
-
-    try {
-
-        await api.post(
-
-            `tasks/${task.id}/archive/`,
-
-            {
-                duration: duration
-            }
-
-        );
-
-        await loadTasks();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            error.response?.data || error
-        );
-
-    }
-
-};
-
-const closeArchiveModal = () => {
-
-    showArchiveModal.value = false;
-
-    taskToArchive.value = null;
-
-};
-
-
-
-const confirmArchive = async ({ task, duration }) => {
-
-
-    await archiveTask(
-        task,
-        duration
-    );
-
-
-    closeArchiveModal();
-
-};
 
 // =======================================================
-// SUPPRESSION
+// SUPPRESSION VERS CORBEILLE
 // =======================================================
 
 const deleteTask = async (task) => {
 
-    const confirmation = confirm(
-
-        "Supprimer cette tâche ?"
-
-    );
+    const confirmation = confirm("Déplacer cette tâche dans la corbeille ?");
 
     if (!confirmation) return;
 
     try {
 
-        await api.delete(
-
-            `tasks/${task.id}/`
-
-        );
+        await api.delete(`tasks/${task.id}/`);
 
         await loadTasks();
 
@@ -475,12 +254,14 @@ const deleteTask = async (task) => {
 
     catch (error) {
 
-        console.error(error);
+        console.error(
+            "Erreur suppression :",
+            error.response?.data || error
+        );
 
     }
 
 };
-
 
 
 // =======================================================
@@ -498,35 +279,46 @@ onMounted(() => {
 
 <style scoped>
 
-.kanban-page {
+.tasks-page {
+
     padding: 30px;
     min-height: 100vh;
     background: #020617;
+
 }
 
 
-.kanban-header {
+.tasks-header {
+
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 16px;
+
 }
 
 
-.kanban-title {
+.tasks-title {
+
     color: white;
     font-size: 32px;
     font-weight: 800;
+
 }
 
 
-.kanban-subtitle {
+.tasks-subtitle {
+
     color: #94a3b8;
     margin-top: 8px;
+
 }
 
 
 .new-task-btn {
+
     background: #2563eb;
     color: white;
     padding: 12px 20px;
@@ -534,45 +326,136 @@ onMounted(() => {
     border: none;
     cursor: pointer;
     font-weight: 600;
+    transition: .2s;
+
 }
 
 
 .new-task-btn:hover {
+
     transform: translateY(-2px);
+    background: #1d4ed8;
+
 }
 
 
-.kanban-board {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 25px;
+.filters {
+
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+
+}
+
+
+.search-input,
+.filter-select {
+
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+    background: #1e293b;
+    color: white;
+    font-size: 14px;
+    outline: none;
+
+}
+
+
+.search-input {
+
+    flex: 1;
+    min-width: 220px;
+
+}
+
+
+.filter-select {
+
+    min-width: 180px;
+
+}
+
+
+.search-input:focus,
+.filter-select:focus {
+
+    border-color: #2563eb;
+
+}
+
+
+.tasks-list {
+
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+
 }
 
 
 .loading-container {
+
     color: white;
     text-align: center;
     padding: 50px;
+
 }
 
 
 .empty-state {
+
     text-align: center;
     color: #94a3b8;
     margin-top: 40px;
+    padding: 40px;
+    background: #1e293b;
+    border-radius: 20px;
+    border: 1px solid #334155;
+
 }
 
 
-@media (max-width: 900px) {
+@media (max-width: 768px) {
 
-    .kanban-board {
-        grid-template-columns: 1fr;
+    .tasks-page {
+
+        padding: 18px;
+
     }
 
-    .kanban-header {
+    .tasks-title {
+
+        font-size: 26px;
+
+    }
+
+    .tasks-header {
+
         flex-direction: column;
-        gap: 20px;
         align-items: flex-start;
+
+    }
+
+    .new-task-btn {
+
+        width: 100%;
+
+    }
+
+    .filters {
+
+        flex-direction: column;
+
+    }
+
+    .search-input,
+    .filter-select {
+
+        width: 100%;
+        box-sizing: border-box;
+
     }
 
 }

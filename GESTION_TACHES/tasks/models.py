@@ -62,6 +62,149 @@ class ArchiveDuration(models.TextChoices):
 
 
 # ============================================================
+# RÔLES UTILISATEUR
+# ============================================================
+
+
+class UserRole(models.TextChoices):
+
+    CEO = "ceo", "PDG / Administrateur"
+
+    EMPLOYEE = "employee", "Employé"
+
+
+# ============================================================
+# ENTREPRISE
+# ============================================================
+
+
+class Company(models.Model):
+
+    name = models.CharField(
+
+        max_length=255
+
+    )
+
+    description = models.TextField(
+
+        blank=True
+
+    )
+
+    owner = models.ForeignKey(
+
+        settings.AUTH_USER_MODEL,
+
+        on_delete=models.CASCADE,
+
+        related_name="owned_companies"
+
+    )
+
+    created_at = models.DateTimeField(
+
+        auto_now_add=True
+
+    )
+
+    updated_at = models.DateTimeField(
+
+        auto_now=True
+
+    )
+
+    class Meta:
+
+        ordering = ["name"]
+
+        verbose_name = "Entreprise"
+
+        verbose_name_plural = "Entreprises"
+
+    def __str__(self):
+
+        return self.name
+
+
+# ============================================================
+# PROFIL UTILISATEUR
+# ============================================================
+
+
+class UserProfile(models.Model):
+
+    user = models.OneToOneField(
+
+        settings.AUTH_USER_MODEL,
+
+        on_delete=models.CASCADE,
+
+        related_name="profile"
+
+    )
+
+    company = models.ForeignKey(
+
+        Company,
+
+        on_delete=models.CASCADE,
+
+        related_name="employees",
+
+        blank=True,
+
+        null=True
+
+    )
+
+    role = models.CharField(
+
+        max_length=20,
+
+        choices=UserRole.choices,
+
+        default=UserRole.EMPLOYEE
+
+    )
+
+    phone = models.CharField(
+
+        max_length=50,
+
+        blank=True
+
+    )
+
+    created_at = models.DateTimeField(
+
+        auto_now_add=True
+
+    )
+
+    updated_at = models.DateTimeField(
+
+        auto_now=True
+
+    )
+
+    class Meta:
+
+        verbose_name = "Profil utilisateur"
+
+        verbose_name_plural = "Profils utilisateurs"
+
+    def __str__(self):
+
+        return f"{self.user.username} - {self.get_role_display()}"
+
+    @property
+    def is_ceo(self):
+
+        return self.role == UserRole.CEO
+
+
+# ============================================================
 # PROJET
 # ============================================================
 
@@ -75,6 +218,20 @@ class Project(models.Model):
         on_delete=models.CASCADE,
 
         related_name="projects"
+
+    )
+
+    company = models.ForeignKey(
+
+        Company,
+
+        on_delete=models.CASCADE,
+
+        related_name="projects",
+
+        blank=True,
+
+        null=True
 
     )
 
@@ -201,6 +358,20 @@ class Category(models.Model):
 
     )
 
+    company = models.ForeignKey(
+
+        Company,
+
+        on_delete=models.CASCADE,
+
+        related_name="categories",
+
+        blank=True,
+
+        null=True
+
+    )
+
     name = models.CharField(
 
         max_length=100
@@ -271,6 +442,20 @@ class Tag(models.Model):
 
     )
 
+    company = models.ForeignKey(
+
+        Company,
+
+        on_delete=models.CASCADE,
+
+        related_name="tags",
+
+        blank=True,
+
+        null=True
+
+    )
+
     name = models.CharField(
 
         max_length=50
@@ -323,7 +508,31 @@ class Task(models.Model):
 
         on_delete=models.CASCADE,
 
+        related_name="created_tasks"
+
+    )
+
+    company = models.ForeignKey(
+
+        Company,
+
+        on_delete=models.CASCADE,
+
         related_name="tasks"
+
+    )
+
+    assigned_to = models.ForeignKey(
+
+        settings.AUTH_USER_MODEL,
+
+        on_delete=models.CASCADE,
+
+        related_name="assigned_tasks",
+
+        blank=True,
+
+        null=True
 
     )
 
@@ -519,6 +728,20 @@ class Task(models.Model):
 
     )
 
+    is_deleted = models.BooleanField(
+
+        default=False
+
+    )
+
+    deleted_at = models.DateTimeField(
+
+        blank=True,
+
+        null=True
+
+    )
+
     class Meta:
 
         ordering = [
@@ -548,12 +771,6 @@ class Task(models.Model):
         self.save()
 
     def archive(self, duration):
-
-        if duration == ["never","delete"]:
-
-            self.delete()
-
-            return
 
         days = {
 
@@ -591,6 +808,26 @@ class Task(models.Model):
 
         self.archive_expires_at = None
 
+        self.is_deleted = False
+
+        self.deleted_at = None
+
+        self.save()
+
+    def soft_delete(self):
+
+        self.is_deleted = True
+
+        self.deleted_at = timezone.now()
+
+        self.save()
+
+    def undelete(self):
+
+        self.is_deleted = False
+
+        self.deleted_at = None
+
         self.save()
 
     @property
@@ -607,6 +844,8 @@ class Task(models.Model):
             and self.status != TaskStatus.DONE
 
             and not self.is_archived
+
+            and not self.is_deleted
 
         )
 
@@ -720,6 +959,20 @@ class Notification(models.Model):
         on_delete=models.CASCADE,
 
         related_name="notifications"
+
+    )
+
+    sender = models.ForeignKey(
+
+        settings.AUTH_USER_MODEL,
+
+        on_delete=models.SET_NULL,
+
+        related_name="sent_notifications",
+
+        blank=True,
+
+        null=True
 
     )
 

@@ -16,26 +16,40 @@ from .views import (
     GoalViewSet,
     NotificationViewSet,
     CommentViewSet,
+    CompanyViewSet,
+    UserProfileViewSet,
 
     DashboardAPIView,
     KanbanAPIView,
     CalendarAPIView,
     StatisticsAPIView,
+    EmployeeListAPIView,
 
-    ArchiveAPIView,
-    ArchiveTaskAPIView,
+    TrashAPIView,
     RestoreTaskAPIView,
+    HardDeleteTaskAPIView,
 
     MoveTaskAPIView,
     ToggleFavoriteAPIView,
 
     MarkNotificationReadAPIView,
     MarkAllNotificationsReadAPIView,
-
-    DeleteArchivedTaskAPIView,
+    UnreadNotificationsAPIView,
 )
 
 router = DefaultRouter()
+
+router.register(
+    "companies",
+    CompanyViewSet,
+    basename="companies",
+)
+
+router.register(
+    "profiles",
+    UserProfileViewSet,
+    basename="profiles",
+)
 
 router.register(
     "projects",
@@ -132,19 +146,23 @@ urlpatterns = [
     ),
 
     # ==========================
-    # Archives
+    # Employés
     # ==========================
 
     path(
-        "archives/",
-        ArchiveAPIView.as_view(),
-        name="archives",
+        "employees/",
+        EmployeeListAPIView.as_view(),
+        name="employees",
     ),
 
+    # ==========================
+    # Corbeille
+    # ==========================
+
     path(
-        "tasks/<int:pk>/archive/",
-        ArchiveTaskAPIView.as_view(),
-        name="archive-task",
+        "trash/",
+        TrashAPIView.as_view(),
+        name="trash",
     ),
 
     path(
@@ -154,9 +172,9 @@ urlpatterns = [
     ),
 
     path(
-        "tasks/<int:pk>/delete/",
-        DeleteArchivedTaskAPIView.as_view(),
-        name="delete-task",
+        "tasks/<int:pk>/hard-delete/",
+        HardDeleteTaskAPIView.as_view(),
+        name="hard-delete-task",
     ),
 
     # ==========================
@@ -178,6 +196,12 @@ urlpatterns = [
     # ==========================
     # Notifications
     # ==========================
+
+    path(
+        "notifications/unread/",
+        UnreadNotificationsAPIView.as_view(),
+        name="notifications-unread",
+    ),
 
     path(
         "notifications/<int:pk>/read/",

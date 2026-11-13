@@ -13,7 +13,7 @@
 
 import { computed } from "vue";
 import { useRoute } from "vue-router";
-import MainLayout from "./layouts/MainLayout.vue";
+import MainLayout from "./Layouts/MainLayout.vue";
 
 
 const route = useRoute();

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-950">
+  <div class="min-h-screen flex items-center justify-center bg-slate-950 p-4">
     <div
       class="w-full max-w-md bg-slate-900 p-8 rounded-3xl border border-slate-700 shadow-xl"
     >
@@ -7,56 +7,53 @@
         Connexion
       </h1>
 
-```
-  <form
-    @submit.prevent="login"
-    class="space-y-5"
-  >
-    <input
-      v-model="form.username"
-      type="text"
-      placeholder="Nom utilisateur"
-      class="input"
-      required
-    />
+      <form
+        @submit.prevent="login"
+        class="space-y-5"
+      >
+        <input
+          v-model="form.username"
+          type="text"
+          placeholder="Nom utilisateur"
+          class="input"
+          required
+        />
 
-    <input
-      v-model="form.password"
-      type="password"
-      placeholder="Mot de passe"
-      class="input"
-      required
-    />
+        <input
+          v-model="form.password"
+          type="password"
+          placeholder="Mot de passe"
+          class="input"
+          required
+        />
 
-    <button
-      type="submit"
-      :disabled="loading"
-      class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition"
-    >
-      {{ loading ? "Connexion..." : "Se connecter" }}
-    </button>
-  </form>
+        <button
+          type="submit"
+          :disabled="loading"
+          class="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 rounded-xl font-semibold transition"
+        >
+          {{ loading ? "Connexion..." : "Se connecter" }}
+        </button>
+      </form>
 
-  <p
-    v-if="error"
-    class="text-red-400 text-center mt-4"
-  >
-    {{ error }}
-  </p>
+      <p
+        v-if="error"
+        class="text-red-400 text-center mt-4"
+      >
+        {{ error }}
+      </p>
 
-  <p class="text-slate-400 text-center mt-6">
-    Pas encore de compte ?
+      <p class="text-slate-400 text-center mt-6">
+        Pas encore de compte ?
 
-    <router-link
-      to="/register"
-      class="text-indigo-400 hover:text-indigo-300"
-    >
-      Créer un compte
-    </router-link>
-  </p>
-</div>
-```
-
+        <router-link
+          to="/register"
+          class="text-indigo-400 hover:text-indigo-300"
+        >
+          Créer un compte
+        </router-link>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -86,13 +83,10 @@ const login = async () => {
   try {
     loading.value = true;
 
-    const response = await api.post(
-      "auth/login/",
-      {
-        username: form.username,
-        password: form.password,
-      }
-    );
+    const response = await api.post("auth/login/", {
+      username: form.username,
+      password: form.password,
+    });
 
     const accessToken = response.data.access;
     const refreshToken = response.data.refresh;
@@ -101,20 +95,20 @@ const login = async () => {
       throw new Error("Tokens JWT manquants dans la réponse.");
     }
 
-    localStorage.setItem(
-      "access",
-      accessToken
-    );
+    localStorage.setItem("access", accessToken);
+    localStorage.setItem("refresh", refreshToken);
+    localStorage.setItem("username", form.username);
 
-    localStorage.setItem(
-      "refresh",
-      refreshToken
-    );
+    // Récupérer les informations de l'utilisateur via le dashboard
+    const dashboardResponse = await api.get("dashboard/");
+    const dashboardData = dashboardResponse.data;
 
-    localStorage.setItem(
-      "username",
-      form.username
-    );
+    localStorage.setItem("is_ceo", dashboardData.is_ceo ? "1" : "0");
+
+    if (dashboardData.company) {
+      localStorage.setItem("company_id", String(dashboardData.company.id));
+      localStorage.setItem("company_name", dashboardData.company.name);
+    }
 
     router.push("/dashboard");
 
@@ -143,6 +137,8 @@ const login = async () => {
   color: white;
   outline: none;
   transition: 0.3s;
+  box-sizing: border-box;
+  font-size: 15px;
 }
 
 .input:focus {
@@ -154,6 +150,3 @@ const login = async () => {
   color: #94a3b8;
 }
 </style>
-
-
-

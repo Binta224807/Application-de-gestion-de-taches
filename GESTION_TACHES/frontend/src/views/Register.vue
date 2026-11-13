@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-950">
+  <div class="min-h-screen flex items-center justify-center bg-slate-950 p-4">
     <div
       class="w-full max-w-md bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700"
     >
@@ -7,63 +7,123 @@
         Créer un compte
       </h1>
 
-```
-  <form
-    @submit.prevent="register"
-    class="space-y-4"
-  >
-    <input
-      v-model="form.username"
-      type="text"
-      placeholder="Nom utilisateur"
-      class="input"
-      required
-    />
+      <form
+        @submit.prevent="register"
+        class="space-y-4"
+      >
+        <input
+          v-model="form.username"
+          type="text"
+          placeholder="Nom utilisateur"
+          class="input"
+          required
+        />
 
-    <input
-      v-model="form.password"
-      type="password"
-      placeholder="Mot de passe"
-      class="input"
-      required
-    />
+        <input
+          v-model="form.email"
+          type="email"
+          placeholder="Email"
+          class="input"
+        />
 
-    <button
-      type="submit"
-      :disabled="loading"
-      class="w-full rounded-xl bg-indigo-600 py-3 text-white font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-    >
-      {{ loading ? "Création du compte..." : "S'inscrire" }}
-    </button>
-  </form>
+        <input
+          v-model="form.password"
+          type="password"
+          placeholder="Mot de passe"
+          class="input"
+          required
+        />
 
-  <p
-    v-if="message"
-    class="text-green-400 text-sm mt-4 text-center"
-  >
-    {{ message }}
-  </p>
+        <input
+          v-model="form.password_confirmation"
+          type="password"
+          placeholder="Confirmer le mot de passe"
+          class="input"
+        />
 
-  <p
-    v-if="error"
-    class="text-red-400 text-sm mt-4 text-center"
-  >
-    {{ error }}
-  </p>
+        <select
+          v-model="form.role"
+          class="input"
+        >
+          <option value="ceo">
+            PDG / Administrateur
+          </option>
 
-  <p class="text-slate-400 text-center mt-6">
-    Tu as déjà un compte ?
+          <option value="employee">
+            Employé
+          </option>
+        </select>
 
-    <router-link
-      to="/login"
-      class="text-indigo-400 hover:text-indigo-300"
-    >
-      Se connecter
-    </router-link>
-  </p>
-</div>
-```
+        <div
+          v-if="form.role === 'ceo'"
+          class="space-y-4"
+        >
+          <input
+            v-model="form.company_name"
+            type="text"
+            placeholder="Nom de l'entreprise"
+            class="input"
+            required
+          />
 
+          <textarea
+            v-model="form.company_description"
+            placeholder="Description de l'entreprise (optionnel)"
+            class="input"
+            rows="3"
+          />
+        </div>
+
+        <div
+          v-else
+          class="space-y-4"
+        >
+          <input
+            v-model="form.company_id"
+            type="number"
+            placeholder="ID de l'entreprise"
+            class="input"
+          />
+
+          <p class="text-slate-400 text-xs">
+            Entrez l'ID de l'entreprise fourni par votre PDG.
+          </p>
+        </div>
+
+        <button
+          type="submit"
+          :disabled="loading"
+          class="w-full rounded-xl bg-indigo-600 py-3 text-white font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+        >
+          {{ loading ? "Création du compte..." : "S'inscrire" }}
+        </button>
+      </form>
+
+      <p
+        v-if="message"
+        class="text-green-400 text-sm mt-4 text-center"
+      >
+        {{ message }}
+      </p>
+
+      <p
+        v-if="error"
+        class="text-red-400 text-sm mt-4 text-center"
+      >
+        {{ error }}
+      </p>
+
+      <p class="text-slate-400 text-center mt-6">
+        Tu as déjà un compte ?
+
+        <router-link
+          to="/login"
+          class="text-indigo-400 hover:text-indigo-300"
+        >
+          Se connecter
+        </router-link>
+      </p>
+    </div>
   </div>
 </template>
 
@@ -77,7 +137,13 @@ const loading = ref(false);
 
 const form = reactive({
   username: "",
+  email: "",
   password: "",
+  password_confirmation: "",
+  role: "ceo",
+  company_name: "",
+  company_description: "",
+  company_id: "",
 });
 
 const register = async () => {
@@ -85,25 +151,49 @@ const register = async () => {
   error.value = "";
 
   if (!form.username || !form.password) {
-    error.value = "Veuillez remplir tous les champs.";
+    error.value = "Veuillez remplir tous les champs obligatoires.";
+    return;
+  }
+
+  if (form.password_confirmation && form.password !== form.password_confirmation) {
+    error.value = "Les mots de passe ne correspondent pas.";
+    return;
+  }
+
+  if (form.role === "ceo" && !form.company_name.trim()) {
+    error.value = "Le nom de l'entreprise est obligatoire pour un PDG.";
     return;
   }
 
   try {
     loading.value = true;
 
-    await api.post(
-      "auth/register/",
-      {
-        username: form.username,
-        password: form.password,
-      }
-    );
+    const payload = {
+      username: form.username,
+      email: form.email,
+      password: form.password,
+      password_confirmation: form.password_confirmation,
+      role: form.role,
+    };
+
+    if (form.role === "ceo") {
+      payload.company_name = form.company_name;
+      payload.company_description = form.company_description;
+    } else {
+      payload.company_id = form.company_id ? Number(form.company_id) : null;
+    }
+
+    await api.post("auth/register/", payload);
 
     message.value = "Compte créé avec succès.";
 
     form.username = "";
+    form.email = "";
     form.password = "";
+    form.password_confirmation = "";
+    form.company_name = "";
+    form.company_description = "";
+    form.company_id = "";
 
     setTimeout(() => {
       window.location.href = "/login";
@@ -133,6 +223,8 @@ const register = async () => {
   color: white;
   outline: none;
   transition: 0.3s;
+  box-sizing: border-box;
+  font-size: 15px;
 }
 
 .input:focus {
@@ -142,5 +234,15 @@ const register = async () => {
 
 .input::placeholder {
   color: #94a3b8;
+}
+
+select.input {
+  appearance: auto;
+  cursor: pointer;
+}
+
+textarea.input {
+  resize: none;
+  min-height: 80px;
 }
 </style>

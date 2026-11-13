@@ -1,7 +1,8 @@
 <script setup>
 
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import api from "../services/api";
+import { formatDuration } from "../services/formatDuration.js";
 
 
 // ======================================================
@@ -44,6 +45,10 @@ const projects = ref([]);
 
 const categories = ref([]);
 
+const employees = ref([]);
+
+const isCEO = ref(localStorage.getItem("is_ceo") === "1");
+
 
 
 // ======================================================
@@ -59,6 +64,8 @@ const form = reactive({
     project: props.task?.project?.id || "",
 
     category: props.task?.category?.id || "",
+
+    assigned_to: props.task?.assigned_to?.id || "",
 
     priority: props.task?.priority || "medium",
 
@@ -379,6 +386,8 @@ const saveTask = async () => {
 
             category_id: categoryId || null,
 
+            assigned_to_id: form.assigned_to || null,
+
             priority: form.priority,
 
             status: form.status,
@@ -512,6 +521,27 @@ const closeForm = () => {
 // INIT
 // ======================================================
 
+const loadEmployees = async () => {
+
+    if (!isCEO.value) return;
+
+    try {
+
+        const response = await api.get("employees/");
+
+        employees.value = response.data;
+
+    }
+
+    catch (error) {
+
+        console.error("Erreur employés :", error);
+
+    }
+
+};
+
+
 onMounted(async()=>{
 
 
@@ -520,6 +550,8 @@ onMounted(async()=>{
         loadProjects(),
 
         loadCategories(),
+
+        loadEmployees(),
 
     ]);
 
@@ -892,6 +924,42 @@ onMounted(async()=>{
 
 
 
+        <!-- ASSIGNATION -->
+
+        <div
+            v-if="isCEO"
+            class="section"
+        >
+
+            <h3>
+                👤 Assignation
+            </h3>
+
+            <label>
+                Employé assigné
+            </label>
+
+            <select
+                v-model="form.assigned_to"
+            >
+
+                <option value="">
+                    Non assigné
+                </option>
+
+                <option
+                    v-for="employee in employees"
+                    :key="employee.id"
+                    :value="employee.id"
+                >
+                    {{ employee.username }}
+                </option>
+
+            </select>
+
+        </div>
+
+
         <!-- PRIORITE -->
 
 
@@ -1029,9 +1097,7 @@ onMounted(async()=>{
 
                     <span>
 
-                        {{ form.estimated_duration }}
-
-                        minutes
+                        {{ formatDuration(form.estimated_duration) }}
 
                     </span>
 

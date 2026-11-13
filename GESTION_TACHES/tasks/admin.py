@@ -8,7 +8,64 @@ from .models import (
     Goal,
     Notification,
     Comment,
+    Company,
+    UserProfile,
 )
+
+
+# ============================================================
+# ENTREPRISES
+# ============================================================
+
+@admin.register(Company)
+class CompanyAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "name",
+        "owner",
+        "created_at",
+        "updated_at",
+    )
+
+    search_fields = (
+        "name",
+        "owner__username",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
+
+
+# ============================================================
+# PROFILS UTILISATEURS
+# ============================================================
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+
+    list_display = (
+        "user",
+        "company",
+        "role",
+        "created_at",
+    )
+
+    list_filter = (
+        "role",
+        "company",
+    )
+
+    search_fields = (
+        "user__username",
+        "company__name",
+    )
+
+    readonly_fields = (
+        "created_at",
+        "updated_at",
+    )
 
 
 # ============================================================

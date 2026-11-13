@@ -2,59 +2,39 @@
 
 <div class="dashboard">
 
-
-    <!-- ============================= -->
     <!-- HEADER -->
-    <!-- ============================= -->
 
     <div class="dashboard-header">
 
         <div>
-
             <h1 class="dashboard-title">
                 Tableau de bord
             </h1>
-
             <p class="dashboard-subtitle">
-                Suivez votre productivité et l'avancement de vos projets.
+                {{ isCEO ? "Pilotage de " + companyName : "Vos tâches" }}
             </p>
-
         </div>
 
     </div>
 
 
-
-    <!-- ============================= -->
     <!-- LOADING -->
-    <!-- ============================= -->
 
     <div
         v-if="loading"
         class="loading-container"
     >
-
         Chargement des données...
-
     </div>
 
 
-
-    <!-- ============================= -->
-    <!-- DASHBOARD CONTENT -->
-    <!-- ============================= -->
+    <!-- CONTENT -->
 
     <template v-else>
 
-
-
-        <!-- ========================= -->
-        <!-- STATISTIQUES -->
-        <!-- ========================= -->
-
+        <!-- STATS PRINCIPALES -->
 
         <div class="stats-grid">
-
 
             <StatCard
                 title="Total des tâches"
@@ -62,13 +42,11 @@
                 :value="dashboard.total_tasks"
             />
 
-
             <StatCard
                 title="À faire"
                 icon="📝"
                 :value="dashboard.todo_tasks"
             />
-
 
             <StatCard
                 title="En cours"
@@ -76,200 +54,122 @@
                 :value="dashboard.in_progress_tasks"
             />
 
-
             <StatCard
                 title="Terminées"
                 icon="✅"
                 :value="dashboard.done_tasks"
             />
 
-
             <StatCard
-                title="Archivées"
-                icon="📦"
-                :value="dashboard.archived_tasks"
+                title="En retard"
+                icon="⚠️"
+                :value="dashboard.overdue_tasks"
             />
-
-
-            <StatCard
-                title="Projets"
-                icon="📁"
-                :value="dashboard.total_projects"
-            />
-
-
-            <StatCard
-                title="Progression globale"
-                icon="📈"
-                :value="dashboard.total_progress + '%'"
-            />
-
 
             <StatCard
                 title="Progression moyenne"
                 icon="🎯"
-                :value="dashboard.average_progress + '%'"
+                :value="Math.round(dashboard.average_progress) + '%'"
             />
-
 
         </div>
 
 
+        <!-- TABLE PAR EMPLOYÉ (PDG) -->
 
+        <section
+            v-if="isCEO"
+            class="dashboard-section"
+        >
 
-        <!-- ========================= -->
-        <!-- PROGRESSION PROJETS -->
-        <!-- ========================= -->
+            <h2>👥 Vue par employé</h2>
 
+            <div class="employees-table-wrapper">
 
-        <section class="dashboard-section">
+                <table class="employees-table">
 
+                    <thead>
 
-            <h2>
-                📊 Progression des projets
-            </h2>
+                        <tr>
+                            <th>Employé</th>
+                            <th>À faire</th>
+                            <th>En cours</th>
+                            <th>Terminées</th>
+                            <th>En retard</th>
+                            <th>Total</th>
+                        </tr>
 
+                    </thead>
 
+                    <tbody>
 
-            <div
-                v-if="projects.length"
-                class="projects-progress"
-            >
+                        <tr
+                            v-for="employee in employeesStats"
+                            :key="employee.id"
+                            class="employee-row"
+                            @click="goToEmployeeTasks(employee.id)"
+                        >
 
+                            <td class="employee-name">
+                                {{ employee.username }}
+                            </td>
 
-                <div
+                            <td>{{ employee.todo }}</td>
+                            <td>{{ employee.in_progress }}</td>
+                            <td>{{ employee.done }}</td>
+                            <td>{{ employee.overdue }}</td>
+                            <td>{{ employee.total }}</td>
 
-                    v-for="project in projects"
+                        </tr>
 
-                    :key="project.id"
+                    </tbody>
 
-                    class="project-progress-card"
-
-                >
-
-
-                    <div class="project-header">
-
-
-                        <span>
-                            {{ project.name }}
-                        </span>
-
-
-                        <span>
-                            {{ project.progress }}%
-                        </span>
-
-
-                    </div>
-
-
-
-                    <div class="progress-bar">
-
-
-                        <div
-
-                            class="progress-fill"
-
-                            :style="{
-                                width: project.progress + '%'
-                            }"
-
-                        ></div>
-
-
-                    </div>
-
-
-
-                    <small>
-
-                        {{ project.completed_tasks }}
-
-                        /
-
-                        {{ project.total_tasks }}
-
-                        tâches terminées
-
-                    </small>
-
-
-                </div>
-
+                </table>
 
             </div>
-
-
-            <p v-else>
-                Aucun projet disponible.
-            </p>
-
 
         </section>
 
 
-
-
-        <!-- ========================= -->
-        <!-- COLONNES INFORMATIONS -->
-        <!-- ========================= -->
-
+        <!-- TÂCHES RÉCENTES -->
 
         <div class="dashboard-columns">
+
+            <div class="column">
+
+                <section class="dashboard-section">
+
+                    <h2>🔥 Tâches urgentes</h2>
+
+                    <ActivityList :tasks="urgentTasks" />
+
+                </section>
+
+
+                <section class="dashboard-section">
+
+                    <h2>⚠️ Tâches en retard</h2>
+
+                    <ActivityList :tasks="overdueTasks" />
+
+                </section>
+
+            </div>
 
 
             <div class="column">
 
-
                 <section class="dashboard-section">
 
+                    <h2>📅 Prochaines échéances</h2>
 
-                    <h2>
-                        🔥 Tâches urgentes
-                    </h2>
-
-
-                    <ActivityList
-
-                        :tasks="urgentTasks"
-
-                    />
-
+                    <ActivityList :tasks="upcomingTasks" />
 
                 </section>
 
-
-
-
-                <section class="dashboard-section">
-
-
-                    <h2>
-                        ⚠️ Tâches en retard
-                    </h2>
-
-
-                    <ActivityList
-
-                        :tasks="overdueTasks"
-
-                    />
-
-
-                </section>
-
-
             </div>
-
-<div class="column">
-
-            </div>
-
 
         </div>
-
 
     </template>
 
@@ -279,161 +179,97 @@
 </template>
 
 
-
 <script setup>
 
-import { ref, onMounted } from "vue";
-
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import api from "../services/api";
-
 
 import StatCard from "../components/StatCard.vue";
 import ActivityList from "../components/ActivityList.vue";
 
-
-
+const router = useRouter();
 
 const loading = ref(true);
 
-
-
 const dashboard = ref({
-
     total_tasks: 0,
-
     todo_tasks: 0,
-
     in_progress_tasks: 0,
-
     review_tasks: 0,
-
     done_tasks: 0,
-
+    overdue_tasks: 0,
     archived_tasks: 0,
-
-    total_projects: 0,
-
-    total_progress: 0,
-
     average_progress: 0,
-
 });
 
-
-
-const projects = ref([]);
-
+const employeesStats = ref([]);
 const urgentTasks = ref([]);
-
 const overdueTasks = ref([]);
-
 const upcomingTasks = ref([]);
 
-const goals = ref([]);
-
-
-
+const isCEO = ref(localStorage.getItem("is_ceo") === "1");
+const companyName = ref(localStorage.getItem("company_name") || "votre entreprise");
 
 
 const loadDashboard = async () => {
 
     try {
 
-        const response = await api.get(
-            "dashboard/"
-        );
-
+        const response = await api.get("dashboard/");
 
         const data = response.data;
 
-
-
         dashboard.value = {
-
             ...dashboard.value,
-
             ...data.stats,
-
         };
 
+        employeesStats.value = data.employees_stats || [];
 
-
-        projects.value =
-            data.projects_progress || [];
-
-
-
-        goals.value =
-            data.goals || [];
-
-
-
-        upcomingTasks.value =
-            data.deadlines || [];
-
-
+        upcomingTasks.value = data.upcoming_tasks || [];
 
     }
 
-    catch(error){
+    catch (error) {
 
-        console.error(
-            "Erreur Dashboard :",
-            error.response?.data || error
-        );
+        console.error("Erreur Dashboard :", error.response?.data || error);
 
     }
 
 };
-
-
-
 
 
 const loadUrgentTasks = async () => {
 
     try {
 
-        const response = await api.get(
-            "tasks/?priority=urgent"
-        );
+        const response = await api.get("tasks/?priority=urgent");
 
-
-        urgentTasks.value =
-            response.data;
-
+        urgentTasks.value = response.data;
 
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(error);
 
     }
 
 };
-
-
-
 
 
 const loadOverdueTasks = async () => {
 
     try {
 
+        const response = await api.get("tasks/?overdue=true");
 
-        const response = await api.get(
-            "tasks/?overdue=true"
-        );
-
-
-        overdueTasks.value =
-            response.data;
-
+        overdueTasks.value = response.data;
 
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(error);
 
@@ -442,35 +278,26 @@ const loadOverdueTasks = async () => {
 };
 
 
-
-
-
 const loadDashboardData = async () => {
-
 
     loading.value = true;
 
-
-
     await Promise.all([
-
         loadDashboard(),
-
         loadUrgentTasks(),
-
         loadOverdueTasks(),
-
     ]);
 
-
-
     loading.value = false;
-
 
 };
 
 
+const goToEmployeeTasks = (employeeId) => {
 
+    router.push(`/tasks?assigned=${employeeId}`);
+
+};
 
 
 onMounted(() => {
@@ -483,251 +310,187 @@ onMounted(() => {
 </script>
 
 
-
-
 <style scoped>
 
+.dashboard {
 
-.dashboard{
-
-    padding:32px;
-
-    min-height:100vh;
-
-    background:#0f172a;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:32px;
+    padding: 32px;
+    min-height: 100vh;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
 
 }
 
 
+.dashboard-header {
 
-.dashboard-header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
 }
 
 
+.dashboard-title {
 
-.dashboard-title{
-
-    color:white;
-
-    font-size:32px;
-
-    font-weight:800;
+    color: white;
+    font-size: 32px;
+    font-weight: 800;
 
 }
 
 
+.dashboard-subtitle {
 
-.dashboard-subtitle{
-
-    color:#94a3b8;
-
-    margin-top:8px;
+    color: #94a3b8;
+    margin-top: 8px;
 
 }
 
 
+.stats-grid {
 
-
-.stats-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(220px,1fr));
-
-    gap:20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
 
 }
 
 
+.dashboard-section {
 
-
-.dashboard-section{
-
-    background:#1e293b;
-
-    border:1px solid #334155;
-
-    border-radius:20px;
-
-    padding:24px;
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 20px;
+    padding: 24px;
 
 }
 
 
+.dashboard-section h2 {
 
-.dashboard-section h2{
-
-    color:white;
-
-    margin-bottom:20px;
-
-}
-
-
-
-
-.projects-progress{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:18px;
+    color: white;
+    margin-bottom: 20px;
+    font-size: 20px;
 
 }
 
 
+.employees-table-wrapper {
 
-
-.project-progress-card{
-
-    background:#0f172a;
-
-    padding:18px;
-
-    border-radius:16px;
+    overflow-x: auto;
 
 }
 
 
+.employees-table {
 
-
-.project-header,
-
-.goal-header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    color:white;
-
-    font-weight:600;
-
-    margin-bottom:12px;
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 500px;
 
 }
 
 
+.employees-table th,
+.employees-table td {
 
-
-.progress-bar{
-
-    height:10px;
-
-    background:#334155;
-
-    border-radius:20px;
-
-    overflow:hidden;
-
-    margin-bottom:10px;
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #334155;
 
 }
 
 
+.employees-table th {
 
-.progress-fill{
-
-    height:100%;
-
-    background:#2563eb;
-
-}
-
-
-
-
-.dashboard-columns{
-
-    display:grid;
-
-    grid-template-columns:1fr 1fr;
-
-    gap:24px;
+    color: #94a3b8;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 
 }
 
 
+.employees-table td {
 
-.column{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:24px;
+    color: #cbd5e1;
+    font-size: 15px;
 
 }
 
 
+.employee-row {
 
-
-.goal-card{
-
-    background:#0f172a;
-
-    border-radius:16px;
-
-    padding:18px;
-
-    margin-bottom:15px;
+    cursor: pointer;
+    transition: .2s;
 
 }
 
 
+.employee-row:hover {
 
-
-.loading-container{
-
-    color:white;
-
-    text-align:center;
-
-    padding:50px;
+    background: rgba(37, 99, 235, 0.1);
 
 }
 
 
+.employee-name {
+
+    color: white;
+    font-weight: 600;
+
+}
+
+
+.dashboard-columns {
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+
+}
+
+
+.column {
+
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+}
+
+
+.loading-container {
+
+    color: white;
+    text-align: center;
+    padding: 50px;
+
+}
+
+
+@media (max-width: 1024px) {
+
+    .dashboard-columns {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
 
 
 @media (max-width: 768px) {
 
     .dashboard {
 
-        width: 100%;
-
-        min-height: calc(100vh - 64px);
-
         padding: 18px 14px;
-
         gap: 20px;
 
-        box-sizing: border-box;
-
     }
-
-
-    .dashboard-header {
-
-        width: 100%;
-
-    }
-
 
     .dashboard-title {
 
@@ -735,64 +498,38 @@ onMounted(() => {
 
     }
 
-
-    .dashboard-subtitle {
-
-        font-size: 14px;
-
-        line-height: 1.5;
-
-    }
-
-
     .stats-grid {
 
-        width: 100%;
-
-        grid-template-columns: 1fr !important;
-
+        grid-template-columns: 1fr 1fr;
         gap: 12px;
 
     }
 
-
     .dashboard-section {
-
-        width: 100%;
 
         padding: 16px;
 
-        border-radius: 16px;
-
-        box-sizing: border-box;
-
     }
 
+    .employees-table th,
+    .employees-table td {
 
-    .dashboard-section h2 {
-
-        font-size: 18px;
-
-    }
-
-
-    .project-progress-card {
-
-        padding: 14px;
-
-    }
-
-
-    .dashboard-columns {
-
-        width: 100%;
-
-        grid-template-columns: 1fr;
-
-        gap: 16px;
+        padding: 10px 12px;
+        font-size: 13px;
 
     }
 
 }
 
-</style>            
+
+@media (max-width: 480px) {
+
+    .stats-grid {
+
+        grid-template-columns: 1fr;
+
+    }
+
+}
+
+</style>

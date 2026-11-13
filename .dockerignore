@@ -1,0 +1,13 @@
+.git/
+venv/
+GESTION_TACHES/venv/
+node_modules/
+GESTION_TACHES/node_modules/
+GESTION_TACHES/frontend/node_modules/
+GESTION_TACHES/frontend/dist/
+__pycache__/
+*.pyc
+GESTION_TACHES/db.sqlite3
+GESTION_TACHES/staticfiles/
+.env
+*.zip

@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import (
 
 def spa(request):
     """Sert l'application Vue pour toutes les routes hors API."""
-    index = settings.BASE_DIR / "frontend" / "dist" / "index.html"
+    index = settings.REPO_ROOT / "frontend" / "dist" / "index.html"
     if index.exists():
         return FileResponse(index.open("rb"), content_type="text/html")
     raise Http404

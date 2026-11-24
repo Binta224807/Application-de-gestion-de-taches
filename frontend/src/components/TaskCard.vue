@@ -169,9 +169,9 @@ const deleteTask = () => {
   width: 100%;
   box-sizing: border-box;
 
-  background: #111827;
+  background: var(--surface);
 
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
 
   border-radius: 16px;
 
@@ -191,9 +191,9 @@ const deleteTask = () => {
 
 .task-row:hover {
 
-  border-color: #2563eb;
+  border-color: var(--accent-border);
 
-  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.2);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
 
   transform: translateY(-2px);
 
@@ -213,7 +213,7 @@ const deleteTask = () => {
 
   font-size: 17px;
   font-weight: 700;
-  color: white;
+  color: var(--text-h);
   margin: 0 0 6px 0;
 
   overflow: hidden;
@@ -225,7 +225,7 @@ const deleteTask = () => {
 
 .task-description {
 
-  color: #94a3b8;
+  color: var(--text);
   font-size: 13px;
   margin: 0;
 
@@ -320,7 +320,7 @@ const deleteTask = () => {
 
 .btn-detail {
 
-  background: #2563eb;
+  background: var(--accent-strong);
   color: white;
   border: none;
   border-radius: 10px;
@@ -337,7 +337,7 @@ const deleteTask = () => {
 
 .btn-detail:hover {
 
-  background: #1d4ed8;
+  background: var(--accent);
   transform: translateY(-1px);
 
 }

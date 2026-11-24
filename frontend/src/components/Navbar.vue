@@ -729,6 +729,8 @@ const logout = () => {
 
     position: relative;
 
+    transition: background .2s, transform .2s;
+
     width: 42px;
     height: 42px;
 
@@ -764,6 +766,8 @@ const logout = () => {
 .notification-badge {
 
     position: absolute;
+
+    animation: pulse-soft 2s ease-in-out infinite;
 
     top: -6px;
     right: -6px;

@@ -27,7 +27,8 @@
         v-for="item in menuItems"
         :key="item.to"
         :to="item.to"
-        class="menu-item"
+        class="menu-item anim-slide-right"
+        :style="{ animationDelay: item.delay }"
       >
         <span class="item-index">{{ item.index }}</span>
         <component :is="item.icon" :size="18" :stroke-width="1.8" class="icon" />
@@ -151,6 +152,7 @@ const menuItems = computed(() => {
   return items.map((item, i) => ({
     ...item,
     index: String(i + 1).padStart(2, "0"),
+    delay: `${0.05 + i * 0.05}s`,
   }));
 
 });
@@ -288,7 +290,7 @@ const emit = defineEmits([
 
   border: 1px solid transparent;
 
-  transition: background .2s, color .2s, border-color .2s;
+  transition: background .2s, color .2s, border-color .2s, transform .2s;
 
 }
 
@@ -326,6 +328,8 @@ const emit = defineEmits([
   color: var(--text-h);
 
   border-color: var(--border);
+
+  transform: translateX(4px);
 
 }
 

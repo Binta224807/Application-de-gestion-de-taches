@@ -24,7 +24,8 @@
         v-if="loading"
         class="loading-container"
     >
-        Chargement des données...
+        <div class="spinner"></div>
+        <p>Chargement des données...</p>
     </div>
 
 
@@ -34,7 +35,7 @@
 
         <!-- STATS PRINCIPALES -->
 
-        <div class="stats-grid">
+        <div class="stats-grid stagger">
 
             <StatCard
                 title="Total des tâches"
@@ -79,7 +80,7 @@
 
         <section
             v-if="isCEO"
-            class="dashboard-section"
+            class="dashboard-section anim-fade-up"
         >
 
             <h2><Users :size="19" class="section-icon" /> Vue par employé</h2>
@@ -135,7 +136,7 @@
 
         <div class="dashboard-columns">
 
-            <div class="column">
+            <div class="column stagger">
 
                 <section class="dashboard-section">
 
@@ -157,7 +158,7 @@
             </div>
 
 
-            <div class="column">
+            <div class="column stagger">
 
                 <section class="dashboard-section">
 
@@ -477,9 +478,17 @@ onMounted(() => {
 
 .loading-container {
 
-    color: white;
+    color: var(--text);
     text-align: center;
     padding: 50px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 16px;
 
 }
 

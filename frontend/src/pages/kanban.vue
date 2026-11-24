@@ -23,7 +23,7 @@
             class="new-task-btn"
             @click="openTaskForm"
         >
-            + Nouvelle tâche
+            <Plus :size="17" /> Nouvelle tâche
         </button>
 
     </div>
@@ -63,7 +63,8 @@
         v-if="loading"
         class="loading-container"
     >
-        Chargement...
+        <div class="spinner"></div>
+        <p>Chargement...</p>
     </div>
 
 
@@ -73,7 +74,7 @@
 
     <div
         v-else
-        class="tasks-list"
+        class="tasks-list stagger"
     >
 
         <TaskCard
@@ -107,12 +108,16 @@
     </div>
 
 
-    <TaskForm
-        v-if="showTaskForm"
-        :task="selectedTask"
-        @close="closeTaskForm"
-        @saved="reloadTasks"
-    />
+    <Transition name="modal">
+
+        <TaskForm
+            v-if="showTaskForm"
+            :task="selectedTask"
+            @close="closeTaskForm"
+            @saved="reloadTasks"
+        />
+
+    </Transition>
 
 </div>
 
@@ -125,6 +130,7 @@ import api from "../services/api";
 
 import TaskCard from "../components/TaskCard.vue";
 import TaskForm from "../components/TaskForm.vue";
+import { Plus } from "lucide-vue-next";
 
 
 // =======================================================
@@ -283,7 +289,7 @@ onMounted(() => {
 
     padding: 30px;
     min-height: 100vh;
-    background: #020617;
+    background: var(--bg);
 
 }
 
@@ -302,7 +308,7 @@ onMounted(() => {
 
 .tasks-title {
 
-    color: white;
+    color: var(--text-h);
     font-size: 32px;
     font-weight: 800;
 
@@ -311,7 +317,7 @@ onMounted(() => {
 
 .tasks-subtitle {
 
-    color: #94a3b8;
+    color: var(--text);
     margin-top: 8px;
 
 }
@@ -319,7 +325,7 @@ onMounted(() => {
 
 .new-task-btn {
 
-    background: #2563eb;
+    background: var(--accent-strong);
     color: white;
     padding: 12px 20px;
     border-radius: 12px;
@@ -328,13 +334,17 @@ onMounted(() => {
     font-weight: 600;
     transition: .2s;
 
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+
 }
 
 
 .new-task-btn:hover {
 
     transform: translateY(-2px);
-    background: #1d4ed8;
+    background: var(--accent);
 
 }
 
@@ -354,8 +364,8 @@ onMounted(() => {
 
     padding: 12px 16px;
     border-radius: 12px;
-    border: 1px solid #334155;
-    background: #1e293b;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
     color: white;
     font-size: 14px;
     outline: none;
@@ -381,7 +391,7 @@ onMounted(() => {
 .search-input:focus,
 .filter-select:focus {
 
-    border-color: #2563eb;
+    border-color: var(--accent);
 
 }
 
@@ -397,9 +407,17 @@ onMounted(() => {
 
 .loading-container {
 
-    color: white;
+    color: var(--text);
     text-align: center;
     padding: 50px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    gap: 16px;
 
 }
 
@@ -407,12 +425,12 @@ onMounted(() => {
 .empty-state {
 
     text-align: center;
-    color: #94a3b8;
+    color: var(--text);
     margin-top: 40px;
     padding: 40px;
-    background: #1e293b;
+    background: var(--surface);
     border-radius: 20px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border);
 
 }
 

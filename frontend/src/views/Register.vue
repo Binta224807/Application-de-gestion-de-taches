@@ -1,5 +1,7 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-slate-950 p-4">
+  <div class="auth-page min-h-screen flex items-center justify-center bg-slate-950 p-4">
+    <div class="auth-glow glow-a"></div>
+    <div class="auth-glow glow-b"></div>
     <div
       class="w-full max-w-md bg-slate-900 rounded-3xl p-8 shadow-2xl border border-slate-700"
     >
@@ -214,6 +216,41 @@ const register = async () => {
 </script>
 
 <style scoped>
+.auth-page {
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-glow {
+  position: absolute;
+  width: 480px;
+  height: 480px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.22;
+  pointer-events: none;
+  animation: float-y 9s ease-in-out infinite;
+}
+
+.glow-a {
+  top: -140px;
+  left: -120px;
+  background: #2563eb;
+}
+
+.glow-b {
+  bottom: -160px;
+  right: -120px;
+  background: #7c3aed;
+  animation-delay: -4.5s;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  animation: scale-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .input {
   width: 100%;
   padding: 12px 16px;

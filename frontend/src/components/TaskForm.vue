@@ -1283,7 +1283,8 @@ onMounted(async()=>{
 .overlay {
     position: fixed;
     inset: 0;
-    background: rgba(15, 23, 42, 0.85);
+    background: rgba(5, 7, 13, 0.8);
+    backdrop-filter: blur(6px);
 
     display: flex;
     align-items: center;
@@ -1473,6 +1474,15 @@ onMounted(async()=>{
     border-color: var(--accent);
 
     color: var(--text-h);
+
+    transform: translateY(-1px);
+
+}
+
+
+.assignee-chip.selected {
+
+    animation: scale-in .25s ease;
 
 }
 

@@ -195,12 +195,16 @@
         </div>
 
 
+        <Transition name="modal">
+
         <TaskForm
             v-if="showTaskForm"
             :task="task"
             @close="closeEditForm"
             @saved="reloadTask"
         />
+
+    </Transition>
 
     </template>
 

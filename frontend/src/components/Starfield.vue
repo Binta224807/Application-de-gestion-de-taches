@@ -1,239 +1,187 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
 
-const stars = ref([]);
-const shooters = ref([]);
-const motes = ref([]);
-const beams = ref([]);
+const canvas = ref(null);
 
-const rand = (min, max) => Math.random() * (max - min) + min;
+let ctx, raf, w, h;
+let stars = [], nodes = [], shooters = [];
+const mouse = { x: -9999, y: -9999 };
+const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = canvas.value.clientWidth;
+    h = canvas.value.clientHeight;
+    canvas.value.width = w * dpr;
+    canvas.value.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    seed();
+}
+
+function seed() {
+    stars = Array.from({ length: 150 }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: Math.random() * 1.4 + 0.4,
+        p: Math.random() * Math.PI * 2,
+        s: Math.random() * 1.6 + 0.5,
+    }));
+    nodes = Array.from({ length: Math.min(90, Math.floor(w / 18)) }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+    }));
+    shooters = [];
+}
+
+function drawStars(t) {
+    for (const s of stars) {
+        const a = 0.12 + 0.6 * (0.5 + 0.5 * Math.sin((t / 1000) * s.s + s.p));
+        ctx.globalAlpha = a;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, 6.283);
+        ctx.fillStyle = "#dbe7ff";
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawNetwork() {
+    for (const n of nodes) {
+        n.x += n.vx;
+        n.y += n.vy;
+        if (n.x < -30) n.x = w + 30;
+        if (n.x > w + 30) n.x = -30;
+        if (n.y < -30) n.y = h + 30;
+        if (n.y > h + 30) n.y = -30;
+    }
+
+    ctx.lineWidth = 1;
+    for (let i = 0; i < nodes.length; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < nodes.length; j++) {
+            const b = nodes[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const d = Math.hypot(dx, dy);
+            if (d < 135) {
+                ctx.globalAlpha = (1 - d / 135) * 0.32;
+                ctx.strokeStyle = "#4a6fa5";
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+            }
+        }
+
+        ctx.globalAlpha = 0.85;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, 1.5, 0, 6.283);
+        ctx.fillStyle = "rgba(150, 190, 255, 0.9)";
+        ctx.fill();
+
+        const mdx = a.x - mouse.x, mdy = a.y - mouse.y;
+        const md = Math.hypot(mdx, mdy);
+        if (md < 170) {
+            ctx.globalAlpha = (1 - md / 170) * 0.55;
+            ctx.strokeStyle = "#60a5fa";
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+        }
+    }
+    ctx.globalAlpha = 1;
+}
+
+function drawShooters() {
+    if (Math.random() < 0.005 && shooters.length < 3) {
+        shooters.push({
+            x: w * 0.25 + Math.random() * w * 0.8,
+            y: Math.random() * h * 0.45,
+            vx: -(9 + Math.random() * 5),
+            vy: 5.5 + Math.random() * 3,
+            life: 1,
+        });
+    }
+
+    ctx.lineWidth = 1.4;
+    ctx.lineCap = "round";
+    for (const sh of shooters) {
+        sh.x += sh.vx;
+        sh.y += sh.vy;
+        sh.life -= 0.011;
+        const len = 15;
+        const grad = ctx.createLinearGradient(
+            sh.x, sh.y,
+            sh.x - sh.vx * len, sh.y - sh.vy * len
+        );
+        grad.addColorStop(0, `rgba(255,255,255,${Math.max(sh.life, 0)})`);
+        grad.addColorStop(1, "rgba(147,197,253,0)");
+        ctx.strokeStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(sh.x, sh.y);
+        ctx.lineTo(sh.x - sh.vx * len, sh.y - sh.vy * len);
+        ctx.stroke();
+    }
+    shooters = shooters.filter(
+        (s) => s.life > 0 && s.x > -250 && s.y < h + 250
+    );
+}
+
+function tick(t) {
+    ctx.clearRect(0, 0, w, h);
+    drawStars(t);
+    drawNetwork();
+    drawShooters();
+    raf = requestAnimationFrame(tick);
+}
+
+function onMouse(e) {
+    const rect = canvas.value.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+}
+
+function onLeave() {
+    mouse.x = -9999;
+    mouse.y = -9999;
+}
 
 onMounted(() => {
-    stars.value = Array.from({ length: 130 }, (_, i) => ({
-        id: i,
-        left: rand(0, 100) + "%",
-        top: rand(0, 100) + "%",
-        size: rand(1, 2.2) + "px",
-        duration: rand(2.5, 7) + "s",
-        delay: rand(0, 7) + "s",
-        base: rand(0.15, 0.55),
-    }));
+    ctx = canvas.value.getContext("2d");
+    resize();
+    window.addEventListener("resize", resize);
 
-    shooters.value = Array.from({ length: 5 }, (_, i) => ({
-        id: i,
-        top: rand(4, 60) + "%",
-        duration: rand(9, 16) + "s",
-        delay: rand(0, 12) + "s",
-    }));
+    if (reduced.matches) {
+        drawStars(0);
+        return;
+    }
 
-    motes.value = Array.from({ length: 26 }, (_, i) => ({
-        id: i,
-        left: rand(2, 98) + "%",
-        size: rand(2, 5) + "px",
-        duration: rand(11, 22) + "s",
-        delay: rand(0, 20) + "s",
-        drift: rand(-50, 50) + "px",
-    }));
+    window.addEventListener("mousemove", onMouse);
+    window.addEventListener("mouseleave", onLeave);
+    raf = requestAnimationFrame(tick);
+});
 
-    beams.value = Array.from({ length: 3 }, (_, i) => ({
-        id: i,
-        top: rand(15, 85) + "%",
-        duration: rand(10, 18) + "s",
-        delay: rand(0, 14) + "s",
-    }));
+onBeforeUnmount(() => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener("resize", resize);
+    window.removeEventListener("mousemove", onMouse);
+    window.removeEventListener("mouseleave", onLeave);
 });
 </script>
 
 <template>
-    <div class="starfield" aria-hidden="true">
-        <span
-            v-for="s in stars"
-            :key="s.id"
-            class="star"
-            :style="{
-                left: s.left,
-                top: s.top,
-                width: s.size,
-                height: s.size,
-                animationDuration: s.duration,
-                animationDelay: s.delay,
-                opacity: s.base,
-            }"
-        />
-        <span
-            v-for="m in motes"
-            :key="'m' + m.id"
-            class="mote"
-            :style="{
-                left: m.left,
-                width: m.size,
-                height: m.size,
-                animationDuration: m.duration,
-                animationDelay: m.delay,
-                '--drift': m.drift,
-            }"
-        />
-        <span
-            v-for="b in beams"
-            :key="'b' + b.id"
-            class="beam"
-            :style="{
-                top: b.top,
-                animationDuration: b.duration,
-                animationDelay: b.delay,
-            }"
-        />
-        <span
-            v-for="sh in shooters"
-            :key="'sh' + sh.id"
-            class="shooting-star"
-            :style="{
-                top: sh.top,
-                animationDuration: sh.duration,
-                animationDelay: sh.delay,
-            }"
-        />
-    </div>
+    <canvas ref="canvas" class="starfield" aria-hidden="true" />
 </template>
 
 <style scoped>
 .starfield {
     position: fixed;
     inset: 0;
-    overflow: hidden;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 0;
-}
-
-/* --- étoiles scintillantes --- */
-
-.star {
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(226, 232, 240, 0.9);
-    animation-name: twinkle;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-}
-
-@keyframes twinkle {
-    0%,
-    100% {
-        opacity: 0.08;
-        transform: scale(0.8);
-    }
-    50% {
-        opacity: 0.9;
-        transform: scale(1.25);
-    }
-}
-
-/* --- particules qui montent --- */
-
-.mote {
-    position: absolute;
-    bottom: -10px;
-    border-radius: 50%;
-    background: rgba(147, 197, 253, 0.5);
-    filter: blur(0.6px);
-    animation-name: rise;
-    animation-timing-function: linear;
-    animation-iteration-count: infinite;
-}
-
-@keyframes rise {
-    0% {
-        transform: translate(0, 0);
-        opacity: 0;
-    }
-    8% {
-        opacity: 0.7;
-    }
-    90% {
-        opacity: 0.25;
-    }
-    100% {
-        transform: translate(var(--drift), -105vh);
-        opacity: 0;
-    }
-}
-
-/* --- traits fins qui balayent l'écran --- */
-
-.beam {
-    position: absolute;
-    left: -30%;
-    width: 60%;
-    height: 1px;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(96, 165, 250, 0.5),
-        rgba(226, 232, 240, 0.7),
-        rgba(96, 165, 250, 0.5),
-        transparent
-    );
-    opacity: 0;
-    animation-name: beam-sweep;
-    animation-timing-function: ease-in-out;
-    animation-iteration-count: infinite;
-}
-
-@keyframes beam-sweep {
-    0% {
-        transform: translateX(0) scaleX(0.4);
-        opacity: 0;
-    }
-    10% {
-        opacity: 0.85;
-    }
-    55% {
-        transform: translateX(180vw) scaleX(1);
-        opacity: 0.5;
-    }
-    70%,
-    100% {
-        transform: translateX(180vw) scaleX(1);
-        opacity: 0;
-    }
-}
-
-/* --- étoiles filantes --- */
-
-.shooting-star {
-    position: absolute;
-    right: -12%;
-    width: 160px;
-    height: 1px;
-    background: linear-gradient(
-        -90deg,
-        rgba(255, 255, 255, 0.85),
-        rgba(147, 197, 253, 0.35),
-        transparent
-    );
-    border-radius: 2px;
-    opacity: 0;
-    animation-name: shoot;
-    animation-timing-function: ease-in;
-    animation-iteration-count: infinite;
-    filter: drop-shadow(0 0 4px rgba(147, 197, 253, 0.6));
-}
-
-@keyframes shoot {
-    0% {
-        transform: rotate(-32deg) translateX(0);
-        opacity: 0;
-    }
-    4% {
-        opacity: 1;
-    }
-    16% {
-        transform: rotate(-32deg) translateX(-145vw);
-        opacity: 0;
-    }
-    100% {
-        transform: rotate(-32deg) translateX(-145vw);
-        opacity: 0;
-    }
 }
 </style>

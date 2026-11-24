@@ -531,6 +531,20 @@ onMounted(() => {
 
     }
 
+
+    .tasks-list {
+
+        gap: 8px;
+
+    }
+
+
+    .tasks-page {
+
+        padding: 14px;
+
+    }
+
 }
 
 </style>

@@ -91,7 +91,7 @@ const deleteTask = () => {
 
 <template>
 
-  <div class="task-row">
+  <div class="task-row" @click="goToDetail">
 
     <!-- COLONNE GAUCHE : TITRE + DESCRIPTION -->
 
@@ -150,7 +150,7 @@ const deleteTask = () => {
 
       <button
         class="btn-detail"
-        @click="goToDetail"
+        @click.stop="goToDetail"
       >
         Détails
       </button>
@@ -371,7 +371,7 @@ const deleteTask = () => {
 }
 
 
-/* MOBILE */
+/* MOBILE : carte compacte, tout le bloc est tactile */
 
 @media (max-width: 640px) {
 
@@ -379,33 +379,24 @@ const deleteTask = () => {
 
     display: flex;
     flex-direction: column;
-    align-items: stretch;
-    gap: 14px;
-    padding: 18px;
+    gap: 8px;
+    padding: 13px 14px;
+    border-radius: 12px;
 
   }
 
 
   .task-title {
 
-    font-size: 16px;
-
-    white-space: normal;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    font-size: 15px;
+    margin-bottom: 3px;
 
   }
 
 
   .task-description {
 
-    white-space: normal;
-
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    font-size: 12px;
 
   }
 
@@ -413,31 +404,30 @@ const deleteTask = () => {
   .task-meta {
 
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
+
+  }
+
+
+  .badge {
+
+    padding: 3px 8px;
+    font-size: 10px;
 
   }
 
 
   .meta-item {
 
-    font-size: 12px;
-    padding: 5px 9px;
+    font-size: 11px;
+    padding: 3px 7px;
 
   }
 
 
   .task-actions {
 
-    width: 100%;
-
-  }
-
-
-  .btn-detail {
-
-    width: 100%;
-    min-height: 44px;
-    font-size: 14px;
+    display: none;
 
   }
 

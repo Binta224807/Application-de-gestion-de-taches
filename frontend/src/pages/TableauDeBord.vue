@@ -24,7 +24,7 @@
         v-if="loading"
         class="loading-container"
     >
-        <div class="spinner"></div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
         <p>Chargement des données...</p>
     </div>
 

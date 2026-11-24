@@ -63,7 +63,7 @@
         v-if="loading"
         class="loading-container"
     >
-        <div class="spinner"></div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
         <p>Chargement...</p>
     </div>
 
@@ -341,10 +341,49 @@ onMounted(() => {
 }
 
 
+.new-task-btn {
+
+    position: relative;
+
+    overflow: hidden;
+
+}
+
+
+.new-task-btn::after {
+
+    content: "";
+
+    position: absolute;
+
+    top: 0;
+
+    left: -80%;
+
+    width: 55%;
+
+    height: 100%;
+
+    background: linear-gradient(
+        105deg,
+        transparent,
+        rgba(255, 255, 255, .22),
+        transparent
+    );
+
+    transform: skewX(-20deg);
+
+    animation: shine-sweep 3.2s ease-in-out infinite;
+
+}
+
+
 .new-task-btn:hover {
 
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     background: var(--accent);
+
+    box-shadow: 0 10px 26px rgba(59, 130, 246, .35);
 
 }
 

@@ -203,8 +203,6 @@ const emit = defineEmits([
 
 .brand h1 {
 
-  color: var(--text-h);
-
   font-family: var(--display);
 
   font-size: 24px;
@@ -212,6 +210,23 @@ const emit = defineEmits([
   font-weight: 700;
 
   letter-spacing: 2px;
+
+  background: linear-gradient(
+    90deg,
+    var(--text-h),
+    var(--accent),
+    var(--text-h)
+  );
+
+  background-size: 220% 100%;
+
+  -webkit-background-clip: text;
+
+  background-clip: text;
+
+  -webkit-text-fill-color: transparent;
+
+  animation: gradient-x 6s ease infinite;
 
 }
 
@@ -343,6 +358,13 @@ const emit = defineEmits([
 }
 
 
+.menu-item:hover .icon {
+
+  animation: icon-wiggle .45s ease;
+
+}
+
+
 /* PAGE ACTIVE */
 
 
@@ -353,6 +375,8 @@ const emit = defineEmits([
   border-color: var(--accent-border);
 
   color: var(--text-h);
+
+  animation: glow-pulse 3s ease-in-out infinite;
 
 }
 

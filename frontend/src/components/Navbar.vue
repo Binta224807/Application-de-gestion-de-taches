@@ -384,6 +384,8 @@ const logout = () => {
 
     border-radius: 12px;
 
+    animation: glow-pulse 3.5s ease-in-out infinite;
+
     background: var(--accent-strong);
 
     color: white;
@@ -478,10 +480,11 @@ const logout = () => {
 
 .search-box:focus-within {
 
-    border-color: #6366f1;
+    border-color: var(--accent);
 
     box-shadow:
-        0 0 0 3px rgba(99,102,241,.10);
+        0 0 0 4px var(--accent-soft),
+        0 0 22px rgba(59,130,246,.18);
 
 }
 

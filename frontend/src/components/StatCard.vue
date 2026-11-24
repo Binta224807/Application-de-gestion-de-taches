@@ -73,16 +73,29 @@ default:null
 
   align-items: center;
 
-  transition: border-color .2s, transform .2s;
+  transition: border-color .25s, transform .25s, box-shadow .25s;
 
 }
 
 
 .stat-card:hover {
 
-  border-color: var(--border-strong);
+  border-color: var(--accent-border);
 
-  transform: translateY(-2px);
+  transform: translateY(-5px);
+
+  box-shadow: 0 14px 34px rgba(59, 130, 246, 0.14);
+
+}
+
+
+.stat-card:hover .stat-icon {
+
+  animation: icon-wiggle .5s ease;
+
+  background: var(--accent);
+
+  color: white;
 
 }
 
@@ -132,6 +145,8 @@ default:null
   color: var(--accent);
 
   flex-shrink: 0;
+
+  transition: background .25s, color .25s;
 
 }
 

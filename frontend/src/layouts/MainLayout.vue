@@ -10,6 +10,9 @@
 
 
 
+    <div class="ambient-glow glow-left"></div>
+    <div class="ambient-glow glow-right"></div>
+
     <div class="main-content">
 
 
@@ -95,7 +98,48 @@ const handleSearch = (value) => {
 
   display:flex;
 
-  background:#020617;
+  background: var(--bg);
+
+}
+
+
+.glow-left {
+
+  width: 460px;
+
+  height: 460px;
+
+  top: -160px;
+
+  left: 22%;
+
+  background: #2563eb;
+
+}
+
+
+.glow-right {
+
+  width: 420px;
+
+  height: 420px;
+
+  bottom: -180px;
+
+  right: -6%;
+
+  background: #7c3aed;
+
+  animation-delay: -9s;
+
+}
+
+
+.main-content {
+
+  position: relative;
+
+  z-index: 1;
 
 }
 

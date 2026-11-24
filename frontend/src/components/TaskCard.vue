@@ -91,7 +91,7 @@ const deleteTask = () => {
 
 <template>
 
-  <div class="task-row" @click="goToDetail">
+  <div class="task-row" :class="'st-' + task.status" @click="goToDetail">
 
     <!-- COLONNE GAUCHE : TITRE + DESCRIPTION -->
 
@@ -371,56 +371,92 @@ const deleteTask = () => {
 }
 
 
-/* MOBILE : carte compacte, tout le bloc est tactile */
+/* MOBILE : ligne compacte style app */
 
 @media (max-width: 640px) {
 
   .task-row {
 
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    padding: 13px 14px;
-    border-radius: 12px;
+    gap: 6px;
+    padding: 10px 12px 10px 16px;
+    border-radius: 10px;
 
   }
 
 
+  .task-row::before {
+
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    border-radius: 3px;
+    background: #3b82f6;
+
+  }
+
+
+  .task-row.st-in_progress::before { background: #d97706; }
+  .task-row.st-review::before { background: #8b5cf6; }
+  .task-row.st-done::before { background: #16a34a; }
+
+
   .task-title {
 
-    font-size: 15px;
-    margin-bottom: 3px;
+    font-size: 14px;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
   }
 
 
   .task-description {
 
-    font-size: 12px;
+    display: none;
 
   }
 
 
   .task-meta {
 
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 5px;
+    overflow: hidden;
 
   }
 
 
   .badge {
 
-    padding: 3px 8px;
-    font-size: 10px;
+    padding: 2px 7px;
+    font-size: 9px;
+    letter-spacing: .4px;
+    flex-shrink: 0;
 
   }
 
 
   .meta-item {
 
-    font-size: 11px;
-    padding: 3px 7px;
+    font-size: 10px;
+    padding: 2px 6px;
+    gap: 4px;
+    flex-shrink: 0;
+
+  }
+
+
+  .meta-item svg {
+
+    width: 11px;
+    height: 11px;
 
   }
 

@@ -395,8 +395,7 @@ Progression globale
 
     padding:40px;
 
-    background:
-        radial-gradient(circle at top,#2b3f89 0%,#020617 55%);
+    background: transparent;
 
 }
 

@@ -289,7 +289,7 @@ onMounted(() => {
 
     padding: 30px;
     min-height: 100vh;
-    background: var(--bg);
+    background: transparent;
 
 }
 

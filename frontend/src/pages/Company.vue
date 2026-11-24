@@ -308,7 +308,7 @@ onMounted(async () => {
 
     padding: 32px;
     min-height: 100vh;
-    background: #020617;
+    background: transparent;
     color: white;
 
 }

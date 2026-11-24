@@ -329,7 +329,7 @@ onMounted(() => {
 
     padding: 32px;
     min-height: 100vh;
-    background: var(--bg);
+    background: transparent;
     display: flex;
     flex-direction: column;
     gap: 32px;

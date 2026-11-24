@@ -368,7 +368,7 @@ onMounted(()=>{
 
     padding:32px;
 
-    background:#0b2b77;
+    background: transparent;
 
     color:white;
 

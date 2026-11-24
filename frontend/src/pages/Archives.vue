@@ -259,7 +259,7 @@ onMounted(() => {
 
     min-height: 100vh;
     padding: 32px;
-    background: #0f172a;
+    background: transparent;
     color: white;
 
 }

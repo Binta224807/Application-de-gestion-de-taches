@@ -377,27 +377,38 @@ const deleteTask = () => {
 
   .task-row {
 
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
     gap: 14px;
-    padding: 16px;
+    padding: 18px;
 
   }
+
 
   .task-title {
 
     font-size: 16px;
-    white-space: normal;
-
-  }
-
-  .task-description {
 
     white-space: normal;
+
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
 
   }
+
+
+  .task-description {
+
+    white-space: normal;
+
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+
+  }
+
 
   .task-meta {
 
@@ -406,16 +417,26 @@ const deleteTask = () => {
 
   }
 
+
+  .meta-item {
+
+    font-size: 12px;
+    padding: 5px 9px;
+
+  }
+
+
   .task-actions {
 
     width: 100%;
 
   }
 
+
   .btn-detail {
 
     width: 100%;
-    padding: 12px;
+    min-height: 44px;
     font-size: 14px;
 
   }

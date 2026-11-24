@@ -1,5 +1,6 @@
 <template>
   <div class="auth-page min-h-screen flex items-center justify-center bg-slate-950 p-4">
+        <Starfield />
     <div class="auth-glow glow-a"></div>
     <div class="auth-glow glow-b"></div>
     <div
@@ -130,6 +131,8 @@
 </template>
 
 <script setup>
+
+import Starfield from "../components/Starfield.vue";
 import { reactive, ref } from "vue";
 import api from "../services/api";
 

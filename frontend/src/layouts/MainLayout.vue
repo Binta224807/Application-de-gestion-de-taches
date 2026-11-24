@@ -10,6 +10,8 @@
 
 
 
+    <Starfield />
+
     <div class="ambient-glow glow-left"></div>
     <div class="ambient-glow glow-right"></div>
 
@@ -57,6 +59,7 @@
 import { ref } from "vue";
 
 import Sidebar from "../components/Sidebar.vue";
+import Starfield from '../components/Starfield.vue';
 import Navbar from "../components/Navbar.vue";
 
 

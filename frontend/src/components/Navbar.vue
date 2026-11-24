@@ -8,7 +8,7 @@
         @click="emit('toggleMenu')"
         aria-label="Ouvrir le menu"
     >
-        ☰
+        <Menu :size="20" />
     </button>
 
 
@@ -16,7 +16,7 @@
     <div class="brand">
 
         <div class="brand-icon">
-            ✓
+            <SquareCheckBig :size="20" />
         </div>
 
         <div class="brand-text">
@@ -32,9 +32,7 @@
 
         <div class="search-box">
 
-            <span class="search-icon">
-                🔍
-            </span>
+            <Search :size="16" class="search-icon" />
 
             <input
                 v-model="search"
@@ -48,7 +46,7 @@
                 class="clear-search"
                 @click="clearSearch"
             >
-                ×
+                <X :size="16" />
             </span>
 
         </div>
@@ -66,7 +64,7 @@
             class="notification-link"
         >
 
-            <span class="notification-icon">🔔</span>
+            <Bell :size="19" class="notification-icon" />
 
             <span
                 v-if="unreadCount > 0"
@@ -113,7 +111,7 @@
             class="logout-btn"
             @click="logout"
         >
-            <span>↪</span>
+            <LogOut :size="16" />
             <span class="logout-text">
                 Déconnexion
             </span>
@@ -150,6 +148,15 @@ import { useRouter } from "vue-router";
 import { useSearch } from "../components/useSearch";
 
 import api from "../services/api";
+
+import {
+    Menu,
+    Search,
+    Bell,
+    LogOut,
+    X,
+    SquareCheckBig,
+} from "lucide-vue-next";
 
 
 const router = useRouter();
@@ -332,16 +339,9 @@ const logout = () => {
 
     padding: 12px 28px;
 
-    background:
-        linear-gradient(
-            135deg,
-            #020617 0%,
-            #0f172a 55%,
-            #111827 100%
-        );
+    background: var(--surface);
 
-    border-bottom:
-        1px solid rgba(148,163,184,.15);
+    border-bottom: 1px solid var(--border);
 
     box-shadow:
         0 8px 30px rgba(0,0,0,.20);
@@ -384,21 +384,15 @@ const logout = () => {
 
     border-radius: 12px;
 
-    background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #7c3aed
-        );
+    background: var(--accent-strong);
 
     color: white;
 
-    font-size: 20px;
+    display: flex;
 
-    font-weight: 900;
+    align-items: center;
 
-    box-shadow:
-        0 8px 20px rgba(37,99,235,.25);
+    justify-content: center;
 
 }
 
@@ -471,11 +465,9 @@ const logout = () => {
 
     padding: 0 15px;
 
-    background:
-        rgba(15,23,42,.85);
+    background: var(--surface-2);
 
-    border:
-        1px solid rgba(148,163,184,.18);
+    border: 1px solid var(--border);
 
     border-radius: 14px;
 
@@ -496,7 +488,7 @@ const logout = () => {
 
 .search-icon {
 
-    font-size: 16px;
+    color: var(--text);
 
     flex-shrink: 0;
 
@@ -524,7 +516,7 @@ const logout = () => {
 
 .search-box input::placeholder {
 
-    color: #64748b;
+    color: var(--text);
 
 }
 
@@ -590,18 +582,15 @@ const logout = () => {
 
     justify-content: center;
 
-    background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #7c3aed
-        );
+    background: var(--accent-strong);
 
     color: white;
 
+    font-family: var(--display);
+
     font-size: 16px;
 
-    font-weight: 800;
+    font-weight: 700;
 
     border:
         2px solid rgba(255,255,255,.10);
@@ -714,14 +703,11 @@ const logout = () => {
 
 .logout-btn {
 
-    color: white;
+    color: var(--text-h);
 
-    background:
-        linear-gradient(
-            135deg,
-            #ef4444,
-            #dc2626
-        );
+    background: transparent;
+
+    border: 1px solid var(--border-strong);
 
 }
 
@@ -730,12 +716,7 @@ const logout = () => {
 
     color: white;
 
-    background:
-        linear-gradient(
-            135deg,
-            #2563eb,
-            #7c3aed
-        );
+    background: var(--accent-strong);
 
 }
 
@@ -755,7 +736,8 @@ const logout = () => {
     align-items: center;
     justify-content: center;
 
-    background: #1e293b;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
     border-radius: 12px;
 
     text-decoration: none;
@@ -774,7 +756,7 @@ const logout = () => {
 
 .notification-icon {
 
-    font-size: 20px;
+    color: var(--text-strong);
 
 }
 
@@ -824,13 +806,13 @@ const logout = () => {
 
     justify-content: center;
 
-    border: none;
+    border: 1px solid var(--border);
 
     border-radius: 12px;
 
-    background: #1e293b;
+    background: var(--surface-2);
 
-    color: white;
+    color: var(--text-h);
 
     font-size: 23px;
 

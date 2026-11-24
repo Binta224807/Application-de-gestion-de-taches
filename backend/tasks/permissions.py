@@ -112,7 +112,9 @@ class IsTaskAccessible(permissions.BasePermission):
 
             return True
 
-        return obj.assigned_to == request.user
+        return obj.assigned_to.filter(
+            pk=request.user.pk
+        ).exists()
 
 
 class IsCEOOrTaskAssignee(permissions.BasePermission):
@@ -137,7 +139,9 @@ class IsCEOOrTaskAssignee(permissions.BasePermission):
 
             return True
 
-        return obj.assigned_to == request.user
+        return obj.assigned_to.filter(
+            pk=request.user.pk
+        ).exists()
 
 
 class IsCompanyOwner(permissions.BasePermission):

@@ -79,26 +79,30 @@ def create_notification(
     return notification
 
 
-def notify_task_assigned(task):
-
-    if not task.assigned_to:
-
-        return
+def notify_task_assigned(task, recipients=None):
 
     sender = task.user
 
-    recipient = task.assigned_to
+    if recipients is None:
 
-    create_notification(
-        title="Nouvelle tâche assignée",
-        message=(
-            f"Le PDG vous a assigné une nouvelle tâche : {task.title}."
-        ),
-        recipient=recipient,
-        sender=sender,
-        task=task,
-        notification_type=NotificationType.INFO,
-    )
+        recipients = task.assigned_to.all()
+
+    for recipient in recipients:
+
+        if recipient == sender:
+
+            continue
+
+        create_notification(
+            title="Nouvelle tâche assignée",
+            message=(
+                f"Le PDG vous a assigné une nouvelle tâche : {task.title}."
+            ),
+            recipient=recipient,
+            sender=sender,
+            task=task,
+            notification_type=NotificationType.INFO,
+        )
 
 
 def notify_status_change(task, previous_status, employee):
@@ -459,7 +463,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 
             raise Http404("Tâche introuvable.")
 
-        if not is_ceo(user) and obj.assigned_to != user:
+        if (
+            not is_ceo(user)
+            and not obj.assigned_to.filter(pk=user.pk).exists()
+        ):
 
             from django.http import Http404
 
@@ -497,28 +504,30 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         previous_status = task.status
 
-        previous_assigned = task.assigned_to
+        previous_assigned = set(
+            task.assigned_to.values_list("pk", flat=True)
+        )
 
         task = serializer.save()
 
         # Notification si nouvelle assignation
 
-        if (
-            task.assigned_to
-            and task.assigned_to != previous_assigned
-            and task.assigned_to != self.request.user
-        ):
+        new_assignees = task.assigned_to.exclude(
+            pk__in=previous_assigned
+        ).exclude(
+            pk=self.request.user.pk
+        )
 
-            notify_task_assigned(task)
+        notify_task_assigned(task, new_assignees)
 
         # Notification si changement de statut
 
-        if task.status != previous_status and task.assigned_to:
+        if task.status != previous_status:
 
             notify_status_change(
                 task,
                 previous_status,
-                task.assigned_to
+                self.request.user
             )
 
     @action(detail=True, methods=["post"])
@@ -533,13 +542,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         task.completed_at = timezone.now()
         task.save()
 
-        if task.assigned_to:
-
-            notify_status_change(
-                task,
-                previous_status,
-                task.assigned_to
-            )
+        notify_status_change(
+            task,
+            previous_status,
+            request.user
+        )
 
         return Response({
             "message": "Tâche terminée.",
@@ -1017,7 +1024,10 @@ class MoveTaskAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if not is_ceo(user) and task.assigned_to != user:
+        if (
+            not is_ceo(user)
+            and not task.assigned_to.filter(pk=user.pk).exists()
+        ):
 
             return Response(
                 {"error": "Accès refusé."},
@@ -1057,12 +1067,12 @@ class MoveTaskAPIView(APIView):
 
         task.save()
 
-        if task.assigned_to and task.status != previous_status:
+        if task.status != previous_status:
 
             notify_status_change(
                 task,
                 previous_status,
-                task.assigned_to
+                request.user
             )
 
         return Response(
@@ -1124,7 +1134,10 @@ class CalendarAPIView(APIView):
                 "priority": task.priority,
                 "color": task.color,
                 "project": task.project.name if task.project else None,
-                "assigned_to": task.assigned_to.username if task.assigned_to else None,
+                "assigned_to": ", ".join(
+                    u.username
+                    for u in task.assigned_to.all()
+                ),
             })
 
         return Response(events)
@@ -1327,7 +1340,10 @@ class RestoreTaskAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if not is_ceo(user) and task.assigned_to != user:
+        if (
+            not is_ceo(user)
+            and not task.assigned_to.filter(pk=user.pk).exists()
+        ):
 
             return Response(
                 {"error": "Accès refusé."},
@@ -1371,7 +1387,10 @@ class HardDeleteTaskAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if not is_ceo(user) and task.assigned_to != user:
+        if (
+            not is_ceo(user)
+            and not task.assigned_to.filter(pk=user.pk).exists()
+        ):
 
             return Response(
                 {"error": "Accès refusé."},
@@ -1416,7 +1435,10 @@ class ToggleFavoriteAPIView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        if not is_ceo(user) and task.assigned_to != user:
+        if (
+            not is_ceo(user)
+            and not task.assigned_to.filter(pk=user.pk).exists()
+        ):
 
             return Response(
                 {"error": "Accès refusé."},

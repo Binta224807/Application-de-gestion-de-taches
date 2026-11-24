@@ -7,7 +7,7 @@
     <div class="company-header">
 
         <div>
-            <h1>🏢 Mon entreprise</h1>
+            <h1><Building2 :size="26" class="page-icon" /> Mon entreprise</h1>
             <p>Gérez votre entreprise et vos employés.</p>
         </div>
 
@@ -103,7 +103,7 @@
 
         <section class="company-card invite-card">
 
-            <h2>👤 Nouvel employé</h2>
+            <h2><UserPlus :size="19" class="section-icon" /> Nouvel employé</h2>
 
             <p class="invite-help">
                 Créez un compte employé en remplissant le formulaire ci-dessous. L'employé devra utiliser l'ID de l'entreprise : <strong>{{ company.id }}</strong>
@@ -179,6 +179,7 @@
 
 
 <script setup>
+import { Building2, UserPlus } from "lucide-vue-next";
 
 import { ref, reactive, onMounted } from "vue";
 import api from "../services/api";

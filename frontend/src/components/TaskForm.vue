@@ -3,6 +3,16 @@
 import { ref, reactive, onMounted, computed } from "vue";
 import api from "../services/api";
 import { formatDuration } from "../services/formatDuration.js";
+import {
+    FileText,
+    FolderKanban,
+    Users,
+    Flag,
+    CalendarDays,
+    Settings2,
+    Check,
+    X,
+} from "lucide-vue-next";
 
 
 // ======================================================
@@ -65,7 +75,8 @@ const form = reactive({
 
     category: props.task?.category?.id || "",
 
-    assigned_to: props.task?.assigned_to?.id || "",
+    assigned_to_ids: (props.task?.assigned_to || [])
+        .map((u) => u.id),
 
     priority: props.task?.priority || "medium",
 
@@ -86,6 +97,30 @@ const form = reactive({
 
 });
 
+
+
+// ======================================================
+// ASSIGNATION MULTIPLE
+// ======================================================
+
+const toggleAssignee = (employeeId) => {
+
+    const index =
+        form.assigned_to_ids.indexOf(employeeId);
+
+    if (index === -1) {
+
+        form.assigned_to_ids.push(employeeId);
+
+    }
+
+    else {
+
+        form.assigned_to_ids.splice(index, 1);
+
+    }
+
+};
 
 
 // ======================================================
@@ -386,7 +421,7 @@ const saveTask = async () => {
 
             category_id: categoryId || null,
 
-            assigned_to_id: form.assigned_to || null,
+            assigned_to_ids: form.assigned_to_ids,
 
             priority: form.priority,
 
@@ -601,7 +636,7 @@ onMounted(async()=>{
 
             >
 
-                ✕
+                <X :size="18" />
 
             </button>
 
@@ -616,7 +651,7 @@ onMounted(async()=>{
 
 
             <h3>
-                📝 Informations
+                <FileText :size="18" class="section-icon" /> Informations
             </h3>
 
 
@@ -678,7 +713,7 @@ onMounted(async()=>{
 
 
             <h3>
-                📁 Organisation
+                <FolderKanban :size="18" class="section-icon" /> Organisation
             </h3>
 
 
@@ -731,7 +766,7 @@ onMounted(async()=>{
 
                         <option value="__new__">
 
-                            ➕ Créer un projet
+                            + Créer un projet
 
                         </option>
 
@@ -792,7 +827,7 @@ onMounted(async()=>{
 
                         <option value="__new__">
 
-                            ➕ Créer une catégorie
+                            + Créer une catégorie
 
                         </option>
 
@@ -932,30 +967,53 @@ onMounted(async()=>{
         >
 
             <h3>
-                👤 Assignation
+                <Users :size="18" class="section-icon" /> Assignation
             </h3>
 
             <label>
-                Employé assigné
+                Employés assignés
             </label>
 
-            <select
-                v-model="form.assigned_to"
+            <div
+                v-if="employees.length"
+                class="assignees"
             >
 
-                <option value="">
-                    Non assigné
-                </option>
-
-                <option
+                <button
                     v-for="employee in employees"
                     :key="employee.id"
-                    :value="employee.id"
+                    type="button"
+                    class="assignee-chip"
+                    :class="{
+                        selected: form.assigned_to_ids.includes(employee.id)
+                    }"
+                    @click="toggleAssignee(employee.id)"
                 >
-                    {{ employee.username }}
-                </option>
 
-            </select>
+                    <span class="chip-avatar">
+                        {{ employee.username.charAt(0).toUpperCase() }}
+                    </span>
+
+                    <span class="chip-name">
+                        {{ employee.username }}
+                    </span>
+
+                    <Check
+                        v-if="form.assigned_to_ids.includes(employee.id)"
+                        :size="15"
+                        class="chip-check"
+                    />
+
+                </button>
+
+            </div>
+
+            <p
+                v-else
+                class="no-employees"
+            >
+                Aucun employé dans l'entreprise.
+            </p>
 
         </div>
 
@@ -967,7 +1025,7 @@ onMounted(async()=>{
 
 
             <h3>
-                ⭐ Priorité
+                <Flag :size="18" class="section-icon" /> Priorité
             </h3>
 
 
@@ -979,22 +1037,22 @@ onMounted(async()=>{
 
 
                 <option value="low">
-                    🟢 Faible
+                    Faible
                 </option>
 
 
                 <option value="medium">
-                    🟡 Moyenne
+                    Moyenne
                 </option>
 
 
                 <option value="high">
-                    🟠 Élevée
+                    Élevée
                 </option>
 
 
                 <option value="urgent">
-                    🔴 Urgente
+                    Urgente
                 </option>
 
 
@@ -1017,7 +1075,7 @@ onMounted(async()=>{
 
 
             <h3>
-                📅 Planification
+                <CalendarDays :size="18" class="section-icon" /> Planification
             </h3>
 
 
@@ -1137,7 +1195,7 @@ onMounted(async()=>{
 
 
             <h3>
-                ⚙️ Options
+                <Settings2 :size="18" class="section-icon" /> Options
             </h3>
 
 
@@ -1344,7 +1402,133 @@ onMounted(async()=>{
 
     margin-bottom: 18px;
 
+    color: var(--text-h);
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+}
+
+
+.section-icon {
+
+    color: var(--accent);
+
+    flex-shrink: 0;
+
+}
+
+
+/* =========================================
+   ASSIGNATION
+========================================= */
+
+.assignees {
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    margin-bottom: 15px;
+
+}
+
+
+.assignee-chip {
+
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding: 8px 14px 8px 8px;
+
+    border-radius: 999px;
+
+    border: 1px solid var(--border-strong);
+
+    background: var(--surface-2);
+
+    color: var(--text);
+
+    font-size: 14px;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition: .2s;
+
+}
+
+
+.assignee-chip:hover {
+
+    border-color: var(--accent);
+
+    color: var(--text-h);
+
+}
+
+
+.assignee-chip.selected {
+
+    background: var(--accent-soft);
+
+    border-color: var(--accent-border);
+
+    color: var(--text-h);
+
+}
+
+
+.chip-avatar {
+
+    width: 28px;
+
+    height: 28px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: var(--accent-strong);
+
     color: white;
+
+    font-size: 12px;
+
+    font-weight: 700;
+
+    flex-shrink: 0;
+
+}
+
+
+.chip-check {
+
+    color: var(--accent);
+
+    flex-shrink: 0;
+
+}
+
+
+.no-employees {
+
+    color: var(--text);
+
+    font-size: 14px;
 
 }
 

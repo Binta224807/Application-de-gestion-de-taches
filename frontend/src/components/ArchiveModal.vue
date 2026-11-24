@@ -5,7 +5,7 @@
     <div class="bg-slate-900 rounded-2xl p-6 w-[400px] shadow-xl">
 
       <h2 class="text-xl font-bold text-white mb-4">
-        📦 Archiver la tâche
+        <Archive :size="17" class="title-icon" /> Archiver la tâche
       </h2>
 
       <p class="text-gray-300 mb-5">
@@ -83,6 +83,7 @@
 
 
 <script setup>
+import { Archive } from "lucide-vue-next";
 
 import { ref } from "vue"
 

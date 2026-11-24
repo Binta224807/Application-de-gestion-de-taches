@@ -9,17 +9,11 @@
 
     <div class="brand">
 
-      <h1>
-        NOVA TASKS
-      </h1>
+      <h1>NOVA TASKS</h1>
 
-      <p>
-        Pilotage d'entreprise
-      </p>
+      <p>Pilotage d'entreprise</p>
 
-      <span class="brand-signature">
-        by Clever
-      </span>
+      <span class="brand-signature">by Clever</span>
 
     </div>
 
@@ -29,70 +23,16 @@
 
     <nav class="menu" @click.stop>
 
-
       <RouterLink
-        to="/dashboard"
+        v-for="item in menuItems"
+        :key="item.to"
+        :to="item.to"
         class="menu-item"
       >
-        <span class="icon">📊</span>
-        <span>Tableau de bord</span>
+        <span class="item-index">{{ item.index }}</span>
+        <component :is="item.icon" :size="18" :stroke-width="1.8" class="icon" />
+        <span class="item-label">{{ item.label }}</span>
       </RouterLink>
-
-
-      <RouterLink
-        to="/tasks"
-        class="menu-item"
-      >
-        <span class="icon">📋</span>
-        <span>Gestion tâches</span>
-      </RouterLink>
-
-
-      <RouterLink
-        to="/calendar"
-        class="menu-item"
-      >
-        <span class="icon">📅</span>
-        <span>Calendrier</span>
-      </RouterLink>
-
-
-      <RouterLink
-        to="/statistics"
-        class="menu-item"
-      >
-        <span class="icon">📈</span>
-        <span>Statistiques</span>
-      </RouterLink>
-
-
-      <RouterLink
-        to="/archives"
-        class="menu-item"
-      >
-        <span class="icon">�️</span>
-        <span>Corbeille</span>
-      </RouterLink>
-
-
-      <RouterLink
-        v-if="isCEO"
-        to="/company"
-        class="menu-item"
-      >
-        <span class="icon">🏢</span>
-        <span>Mon entreprise</span>
-      </RouterLink>
-
-
-      <RouterLink
-        to="/notifications"
-        class="menu-item"
-      >
-        <span class="icon">🔔</span>
-        <span>Notifications</span>
-      </RouterLink>
-
 
     </nav>
 
@@ -141,6 +81,15 @@
 
 <script setup>
 import { computed } from "vue";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  CalendarDays,
+  BarChart3,
+  Trash2,
+  Building2,
+  Bell,
+} from "lucide-vue-next";
 
 const props = defineProps({
 
@@ -171,6 +120,41 @@ const initial = computed(() => {
 
 });
 
+const baseItems = [
+  { to: "/dashboard",     label: "Tableau de bord", icon: LayoutDashboard },
+  { to: "/tasks",         label: "Gestion tâches",  icon: ClipboardList },
+  { to: "/calendar",      label: "Calendrier",      icon: CalendarDays },
+  { to: "/statistics",    label: "Statistiques",    icon: BarChart3 },
+  { to: "/archives",      label: "Corbeille",       icon: Trash2 },
+];
+
+const menuItems = computed(() => {
+
+  const items = [...baseItems];
+
+  if (isCEO) {
+
+    items.push({
+      to: "/company",
+      label: "Mon entreprise",
+      icon: Building2,
+    });
+
+  }
+
+  items.push({
+    to: "/notifications",
+    label: "Notifications",
+    icon: Bell,
+  });
+
+  return items.map((item, i) => ({
+    ...item,
+    index: String(i + 1).padStart(2, "0"),
+  }));
+
+});
+
 const emit = defineEmits([
   "close"
 ]);
@@ -191,59 +175,71 @@ const emit = defineEmits([
 
   top: 0;
 
+  flex-shrink: 0;
 
-  background:
+  background: var(--surface);
 
-  linear-gradient(
-    180deg,
-    #111827,
-    #1e1b4b,
-    #020617
-  );
+  border-right: 1px solid var(--border);
 
+  display: flex;
 
-  border-right: 1px solid rgba(148,163,184,.15);
+  flex-direction: column;
 
-
-  display:flex;
-
-  flex-direction:column;
-
-
-  padding:28px;
-
+  padding: 28px 20px;
 
 }
-
 
 
 /* BRAND */
 
 
+.brand {
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+
 .brand h1 {
 
-  color:white;
+  color: var(--text-h);
 
-  font-size:26px;
+  font-family: var(--display);
 
-  font-weight:900;
+  font-size: 24px;
 
-  letter-spacing:1px;
+  font-weight: 700;
 
+  letter-spacing: 2px;
 
 }
 
 
 .brand p {
 
-  margin-top:8px;
+  margin-top: 6px;
 
-  color:#94a3b8;
+  color: var(--text);
 
-  font-size:14px;
+  font-size: 13px;
 
 }
 
+
+.brand-signature {
+
+  display: block;
+
+  margin-top: 6px;
+
+  color: var(--accent);
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  letter-spacing: 1px;
+
+}
 
 
 /* MENU */
@@ -251,68 +247,96 @@ const emit = defineEmits([
 
 .menu {
 
-  margin-top:45px;
+  margin-top: 40px;
 
-  display:flex;
+  display: flex;
 
-  flex-direction:column;
+  flex-direction: column;
 
-  gap:12px;
+  gap: 6px;
 
-  flex:1;
+  flex: 1;
+
+  min-height: 0;
+
+  overflow-y: auto;
+
+  padding-right: 4px;
 
 }
-
 
 
 .menu-item {
 
+  display: flex;
 
-  display:flex;
+  align-items: center;
 
-  align-items:center;
+  gap: 14px;
 
-  gap:15px;
+  padding: 13px 14px;
 
+  border-radius: var(--radius);
 
-  padding:15px 18px;
+  color: var(--text);
 
+  text-decoration: none;
 
-  border-radius:18px;
+  font-weight: 500;
 
+  font-size: 14px;
 
-  color:#cbd5e1;
+  border: 1px solid transparent;
 
-
-  text-decoration:none;
-
-
-  font-weight:600;
-
-
-  transition:.3s;
-
+  transition: background .2s, color .2s, border-color .2s;
 
 }
 
+
+.item-index {
+
+  font-family: var(--display);
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  color: var(--text);
+
+  opacity: .5;
+
+  width: 20px;
+
+  flex-shrink: 0;
+
+}
+
+
+.menu-item .icon {
+
+  flex-shrink: 0;
+
+}
 
 
 .menu-item:hover {
 
+  background: var(--surface-2);
 
-  background:
+  color: var(--text-h);
 
-  rgba(99,102,241,.18);
-
-
-  color:white;
-
-
-  transform:translateX(6px);
-
+  border-color: var(--border);
 
 }
 
+
+.menu-item:hover .item-index {
+
+  color: var(--accent);
+
+  opacity: 1;
+
+}
 
 
 /* PAGE ACTIVE */
@@ -320,34 +344,29 @@ const emit = defineEmits([
 
 .router-link-active {
 
+  background: var(--accent-soft);
 
-  background:
+  border-color: var(--accent-border);
 
-  linear-gradient(
-    90deg,
-    rgba(59,130,246,.45),
-    rgba(139,92,246,.35)
-  );
-
-
-  color:white;
-
-
-  box-shadow:
-
-  0 10px 30px rgba(59,130,246,.15);
-
+  color: var(--text-h);
 
 }
 
 
+.router-link-active .item-index {
 
-.icon {
+  color: var(--accent);
 
-  font-size:20px;
+  opacity: 1;
 
 }
 
+
+.router-link-active .icon {
+
+  color: var(--accent);
+
+}
 
 
 /* PROFIL */
@@ -355,106 +374,81 @@ const emit = defineEmits([
 
 .profile {
 
+  display: flex;
 
-  display:flex;
+  align-items: center;
 
-  align-items:center;
+  gap: 14px;
 
-  gap:14px;
+  padding: 20px 8px 0;
 
+  border-top: 1px solid var(--border);
 
-  padding-top:20px;
-
-
-  border-top:
-
-  1px solid rgba(148,163,184,.15);
-
+  flex-shrink: 0;
 
 }
-
 
 
 .avatar {
 
+  width: 44px;
 
-  width:48px;
+  height: 44px;
 
-  height:48px;
+  border-radius: 50%;
 
+  display: flex;
 
-  border-radius:50%;
+  align-items: center;
 
+  justify-content: center;
 
-  display:flex;
+  background: var(--accent-strong);
 
-  align-items:center;
+  color: white;
 
-  justify-content:center;
+  font-family: var(--display);
 
+  font-weight: 700;
 
-  background:
-
-  linear-gradient(
-    135deg,
-    #2563eb,
-    #9333ea
-  );
-
-
-  color:white;
-
-  font-weight:900;
-
-  font-size:18px;
-
+  font-size: 17px;
 
 }
-
 
 
 .username {
 
-  color:white;
+  color: var(--text-h);
 
-  font-weight:700;
+  font-weight: 600;
 
 }
-
 
 
 .status {
 
+  display: flex;
 
-  display:flex;
+  align-items: center;
 
-  align-items:center;
+  gap: 6px;
 
-  gap:6px;
+  color: var(--success);
 
-
-  color:#22c55e;
-
-  font-size:13px;
-
+  font-size: 12px;
 
 }
 
 
-
 .status span {
 
+  width: 7px;
 
-  width:8px;
+  height: 7px;
 
-  height:8px;
+  border-radius: 50%;
 
-
-  border-radius:50%;
-
-
-  background:#22c55e;
-
+  background: var(--success);
 
 }
 
@@ -463,86 +457,53 @@ const emit = defineEmits([
 
   .sidebar{
 
-  width:280px;
+    position: fixed;
 
-  position:fixed;
+    left: -300px;
 
-  left:-300px;
+    top: 0;
 
-  top:0;
+    z-index: 1000;
 
-  z-index:1000;
+    transition: .3s;
 
-  transition:.3s;
+  }
 
-}
+  .sidebar.open{
 
-.sidebar.open{
+    left: 0;
 
-  left:0;
-
-}
-
-.brand p,
-.brand-signature,
-.menu-item span,
-.user-info{
-
-  display:block;
-
-}
-
-.menu-item{
-
-  justify-content:flex-start;
+  }
 
 }
 
 
-
-}
-
-@media(max-width:768px){
+@media (max-width:768px){
 
 
-.sidebar{
+  .sidebar{
 
-position:fixed;
+    position: fixed;
 
-left:-300px;
+    left: -300px;
 
-top:0;
+    top: 0;
 
-z-index:1000;
+    z-index: 1000;
 
-transition:.3s;
+    transition: .3s;
 
-}
+  }
 
 
-.sidebar.open{
+  .sidebar.open{
 
-left:0;
+    left: 0;
 
-}
-
+  }
 
 
 }
-.brand-signature {
 
-  display:block;
 
-  margin-top:6px;
-
-  color:#2180ed;
-
-  font-size:15px;
-
-  font-weight:900;
-
-  letter-spacing:1px;
-
-}
 </style>
-

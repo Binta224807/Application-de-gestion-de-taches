@@ -78,7 +78,7 @@
 
       >
 
-        ⭐
+        <Star :size="18" fill="currentColor" />
 
       </span>
 
@@ -99,7 +99,7 @@
 
       <span>
 
-        📌 {{ project.tasks_count || 0 }} tâche(s)
+        <Pin :size="14" /> {{ project.tasks_count || 0 }} tâche(s)
 
       </span>
 
@@ -149,6 +149,7 @@
 
 
 <script setup>
+import { Star, Pin } from "lucide-vue-next";
 
 
 defineProps({

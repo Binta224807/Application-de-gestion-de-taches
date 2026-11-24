@@ -1,40 +1,26 @@
 <template>
 
-  <div
-    class="bg-slate-900 rounded-3xl p-6 border border-slate-700 shadow-xl hover:shadow-2xl transition"
-  >
+  <div class="stat-card">
 
-    <div class="flex justify-between items-center">
+    <div class="stat-info">
 
+      <p class="stat-title">{{ title }}</p>
 
-      <div>
-
-        <p class="text-slate-400 text-sm">
-          {{ title }}
-        </p>
-
-
-        <h3 class="text-3xl font-bold text-white mt-3">
-          {{ value }}
-        </h3>
-
-
-      </div>
-
-
-
-      <div
-        class="text-3xl"
-      >
-        {{ icon }}
-      </div>
-
+      <h3 class="stat-value">{{ value }}</h3>
 
     </div>
 
+    <div class="stat-icon">
+
+      <component
+        :is="icon"
+        :size="20"
+        :stroke-width="1.8"
+      />
+
+    </div>
 
   </div>
-
 
 </template>
 
@@ -58,12 +44,95 @@ required:true
 
 
 icon:{
-type:String,
-default:"📊"
+type:[Object,Function],
+default:null
 }
 
 
 });
 
-
 </script>
+
+
+
+<style scoped>
+
+.stat-card {
+
+  background: var(--surface);
+
+  border: 1px solid var(--border);
+
+  border-radius: var(--radius-l);
+
+  padding: 22px;
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  transition: border-color .2s, transform .2s;
+
+}
+
+
+.stat-card:hover {
+
+  border-color: var(--border-strong);
+
+  transform: translateY(-2px);
+
+}
+
+
+.stat-title {
+
+  color: var(--text);
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+}
+
+
+.stat-value {
+
+  color: var(--text-h);
+
+  font-family: var(--display);
+
+  font-size: 30px;
+
+  font-weight: 700;
+
+  margin-top: 8px;
+
+}
+
+
+.stat-icon {
+
+  width: 44px;
+
+  height: 44px;
+
+  border-radius: var(--radius);
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  background: var(--accent-soft);
+
+  color: var(--accent);
+
+  flex-shrink: 0;
+
+}
+
+</style>

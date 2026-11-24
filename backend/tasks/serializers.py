@@ -197,6 +197,7 @@ class TaskSerializer(serializers.ModelSerializer):
     )
 
     assigned_to = UserSerializer(
+        many=True,
         read_only=True
     )
 
@@ -216,12 +217,12 @@ class TaskSerializer(serializers.ModelSerializer):
         allow_null=True
     )
 
-    assigned_to_id = serializers.PrimaryKeyRelatedField(
+    assigned_to_ids = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(),
         source="assigned_to",
         write_only=True,
-        required=False,
-        allow_null=True
+        many=True,
+        required=False
     )
 
     is_overdue = serializers.ReadOnlyField()
@@ -240,7 +241,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "created_by",
             "company",
             "assigned_to",
-            "assigned_to_id",
+            "assigned_to_ids",
             "project",
             "project_id",
             "category",
@@ -295,20 +296,22 @@ class TaskSerializer(serializers.ModelSerializer):
 
                 if assigned_to:
 
-                    assigned_profile = getattr(
-                        assigned_to,
-                        "profile",
-                        None
-                    )
+                    for assignee in assigned_to:
 
-                    if (
-                        not assigned_profile
-                        or assigned_profile.company != company
-                    ):
-
-                        raise serializers.ValidationError(
-                            "L'employé assigné doit appartenir à la même entreprise."
+                        assigned_profile = getattr(
+                            assignee,
+                            "profile",
+                            None
                         )
+
+                        if (
+                            not assigned_profile
+                            or assigned_profile.company != company
+                        ):
+
+                            raise serializers.ValidationError(
+                                "Les employés assignés doivent appartenir à la même entreprise."
+                            )
 
                 project = data.get("project")
 

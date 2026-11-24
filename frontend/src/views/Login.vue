@@ -3,6 +3,11 @@
     <div
       class="w-full max-w-md bg-slate-900 p-8 rounded-3xl border border-slate-700 shadow-xl"
     >
+      <div class="brand">
+        <span class="brand-name">NOVA TASKS</span>
+        <span class="brand-sub">Pilotage d'entreprise · by Clever</span>
+      </div>
+
       <h1 class="text-3xl font-bold text-white text-center mb-8">
         Connexion
       </h1>
@@ -128,6 +133,28 @@ const login = async () => {
 </script>
 
 <style scoped>
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 28px;
+}
+
+.brand-name {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.brand-sub {
+  color: #64748b;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
 .input {
   width: 100%;
   padding: 12px;

@@ -194,7 +194,7 @@
 
     >
 
-      🚀 Créer le projet
+      <Rocket :size="16" /> Créer le projet
 
     </button>
 
@@ -215,6 +215,7 @@
 
 
 <script setup>
+import { Rocket } from "lucide-vue-next";
 
 
 import { reactive } from "vue";

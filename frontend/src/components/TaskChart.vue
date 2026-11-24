@@ -1,4 +1,5 @@
 <script setup>
+import { Archive } from "lucide-vue-next";
 
 const props = defineProps({
 
@@ -139,7 +140,7 @@ const moveTask = (status) => {
 
       <span>
 
-        📅 DATE LIM :
+        DATE LIM :
 
         {{ task.due_date || "Pas de date" }}
 
@@ -157,7 +158,7 @@ const moveTask = (status) => {
 
       <span>
 
-        🏷️ CAT :
+        CAT :
 
         {{ task.category_name || "Sans catégorie" }}
 
@@ -166,7 +167,7 @@ const moveTask = (status) => {
 
       <span>
 
-        ⏱️ DUR :
+        DUR :
 
         {{ task.estimated_duration || 0 }} min
 
@@ -256,7 +257,7 @@ const moveTask = (status) => {
         @click="emit('archiveTask', task)"
       >
 
-        📦 Archiver
+        <Archive :size="15" /> Archiver
 
       </button>
 

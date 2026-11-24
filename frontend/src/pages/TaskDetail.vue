@@ -71,7 +71,7 @@
                     class="btn-edit"
                     @click="openEditForm"
                 >
-                    ✏️ Modifier
+                    <Pencil :size="15" /> Modifier
                 </button>
 
                 <button
@@ -79,7 +79,7 @@
                     class="btn-delete"
                     @click="deleteTask"
                 >
-                    🗑️ Supprimer
+                    <Trash2 :size="15" /> Supprimer
                 </button>
 
             </div>
@@ -93,7 +93,7 @@
 
             <div class="detail-card main-info">
 
-                <h2>📝 Description</h2>
+                <h2><FileText :size="18" class="section-icon" /> Description</h2>
 
                 <p class="description">
                     {{ task.description || "Aucune description" }}
@@ -104,7 +104,7 @@
 
             <div class="detail-card meta-info">
 
-                <h2>📋 Informations</h2>
+                <h2><ClipboardList :size="18" class="section-icon" /> Informations</h2>
 
                 <div class="meta-list">
 
@@ -215,6 +215,7 @@ import { useRoute, useRouter } from "vue-router";
 import api from "../services/api";
 import { formatDuration } from "../services/formatDuration.js";
 import TaskForm from "../components/TaskForm.vue";
+import { Pencil, Trash2, FileText, ClipboardList } from "lucide-vue-next";
 
 
 const route = useRoute();
@@ -259,13 +260,17 @@ const priorityLabel = computed(() => {
 
 const assignedName = computed(() => {
 
-    if (task.value?.assigned_to?.username) {
+    const assignees = task.value?.assigned_to || [];
 
-        return task.value.assigned_to.username;
+    if (!assignees.length) {
+
+        return "Non assigné";
 
     }
 
-    return "Non assigné";
+    return assignees
+        .map((u) => u.username)
+        .join(", ");
 
 });
 
@@ -274,7 +279,11 @@ const canEdit = computed(() => {
 
     if (isCEO.value) return true;
 
-    return task.value?.assigned_to?.username === currentUser.value;
+    const assignees = task.value?.assigned_to || [];
+
+    return assignees.some(
+        (u) => u.username === currentUser.value
+    );
 
 });
 
@@ -283,7 +292,11 @@ const canDelete = computed(() => {
 
     if (isCEO.value) return true;
 
-    return task.value?.assigned_to?.username === currentUser.value;
+    const assignees = task.value?.assigned_to || [];
+
+    return assignees.some(
+        (u) => u.username === currentUser.value
+    );
 
 });
 

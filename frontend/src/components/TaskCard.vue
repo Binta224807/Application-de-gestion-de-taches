@@ -3,6 +3,7 @@
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { formatDuration } from "../services/formatDuration.js";
+import { User, Hourglass, CalendarDays } from "lucide-vue-next";
 
 const props = defineProps({
   task: {
@@ -46,13 +47,24 @@ const statusLabel = computed(() => {
 
 const assignedName = computed(() => {
 
-  if (props.task.assigned_to && props.task.assigned_to.username) {
+  const assignees = props.task.assigned_to || [];
 
-    return props.task.assigned_to.username;
+  if (!assignees.length) {
+
+    return "Non assigné";
 
   }
 
-  return "Non assigné";
+  const names = assignees
+    .map((u) => u.username);
+
+  if (names.length === 1) {
+
+    return names[0];
+
+  }
+
+  return `${names[0]} +${names.length - 1}`;
 
 });
 
@@ -115,18 +127,18 @@ const deleteTask = () => {
       </span>
 
       <span class="meta-item">
-        👤 {{ assignedName }}
+        <User :size="13" /> {{ assignedName }}
       </span>
 
       <span class="meta-item">
-        ⏱️ {{ formatDuration(task.estimated_duration) }}
+        <Hourglass :size="13" /> {{ formatDuration(task.estimated_duration) }}
       </span>
 
       <span
         v-if="task.due_date"
         class="meta-item"
       >
-        📅 {{ task.due_date }}
+        <CalendarDays :size="13" /> {{ task.due_date }}
       </span>
 
     </div>
@@ -282,13 +294,17 @@ const deleteTask = () => {
 
 .meta-item {
 
-  color: #cbd5e1;
+  color: var(--text-strong);
   font-size: 13px;
   padding: 4px 10px;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
 
   white-space: nowrap;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 
 }
 

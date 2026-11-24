@@ -96,7 +96,7 @@
         class="favorite"
       >
 
-        ⭐ Favori
+        <Star :size="15" /> Favori
 
       </span>
 
@@ -120,7 +120,7 @@
 
         <span>
 
-          📌
+          <Pin :size="15" />
 
         </span>
 
@@ -146,7 +146,7 @@
 
         <span>
 
-          ✅
+          <CircleCheck :size="15" />
 
         </span>
 
@@ -173,7 +173,7 @@
 
         <span>
 
-          🚀
+          <Rocket :size="15" />
 
         </span>
 
@@ -283,6 +283,7 @@
 
 
 <script setup>
+import { Star, Pin, CircleCheck, Rocket } from "lucide-vue-next";
 
 
 import {

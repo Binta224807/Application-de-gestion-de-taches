@@ -7,7 +7,7 @@
     <div class="notifications-header">
 
         <div>
-            <h1>🔔 Notifications</h1>
+            <h1><Bell :size="26" class="page-icon" /> Notifications</h1>
             <p>Consultez vos notifications et accédez aux tâches associées.</p>
         </div>
 
@@ -38,7 +38,7 @@
         v-else-if="notifications.length === 0"
         class="empty"
     >
-        <span>🔔</span>
+        <span class="notif-icon"><Bell :size="18" /></span>
         <h2>Aucune notification</h2>
         <p>Vous n'avez pas de notification pour le moment.</p>
     </div>
@@ -100,6 +100,7 @@
 
 
 <script setup>
+import { Bell } from "lucide-vue-next";
 
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";

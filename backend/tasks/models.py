@@ -522,17 +522,13 @@ class Task(models.Model):
 
     )
 
-    assigned_to = models.ForeignKey(
+    assigned_to = models.ManyToManyField(
 
         settings.AUTH_USER_MODEL,
 
-        on_delete=models.CASCADE,
-
         related_name="assigned_tasks",
 
-        blank=True,
-
-        null=True
+        blank=True
 
     )
 

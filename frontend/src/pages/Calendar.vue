@@ -1,4 +1,5 @@
 <script setup>
+import { CalendarDays, Folder } from "lucide-vue-next";
 
 import { ref, computed, onMounted } from "vue";
 import api from "../services/api";
@@ -221,7 +222,7 @@ onMounted(()=>{
         <div>
 
             <h1>
-                📅 Calendrier
+                <CalendarDays :size="24" class="page-icon" /> Calendrier
             </h1>
 
 
@@ -335,7 +336,7 @@ onMounted(()=>{
 
                     <small>
 
-                        📁
+                        <Folder :size="13" class="meta-icon" />
                         {{ task.project || "Sans projet" }}
 
                     </small>

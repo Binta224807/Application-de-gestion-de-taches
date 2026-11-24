@@ -38,37 +38,37 @@
 
             <StatCard
                 title="Total des tâches"
-                icon="📋"
+                :icon="ClipboardList"
                 :value="dashboard.total_tasks"
             />
 
             <StatCard
                 title="À faire"
-                icon="📝"
+                :icon="FileEdit"
                 :value="dashboard.todo_tasks"
             />
 
             <StatCard
                 title="En cours"
-                icon="⏳"
+                :icon="Hourglass"
                 :value="dashboard.in_progress_tasks"
             />
 
             <StatCard
                 title="Terminées"
-                icon="✅"
+                :icon="CircleCheck"
                 :value="dashboard.done_tasks"
             />
 
             <StatCard
                 title="En retard"
-                icon="⚠️"
+                :icon="TriangleAlert"
                 :value="dashboard.overdue_tasks"
             />
 
             <StatCard
                 title="Progression moyenne"
-                icon="🎯"
+                :icon="Target"
                 :value="Math.round(dashboard.average_progress) + '%'"
             />
 
@@ -82,7 +82,7 @@
             class="dashboard-section"
         >
 
-            <h2>👥 Vue par employé</h2>
+            <h2><Users :size="19" class="section-icon" /> Vue par employé</h2>
 
             <div class="employees-table-wrapper">
 
@@ -139,7 +139,7 @@
 
                 <section class="dashboard-section">
 
-                    <h2>🔥 Tâches urgentes</h2>
+                    <h2><Flame :size="19" class="section-icon" /> Tâches urgentes</h2>
 
                     <ActivityList :tasks="urgentTasks" />
 
@@ -148,7 +148,7 @@
 
                 <section class="dashboard-section">
 
-                    <h2>⚠️ Tâches en retard</h2>
+                    <h2><TriangleAlert :size="19" class="section-icon" /> Tâches en retard</h2>
 
                     <ActivityList :tasks="overdueTasks" />
 
@@ -161,7 +161,7 @@
 
                 <section class="dashboard-section">
 
-                    <h2>📅 Prochaines échéances</h2>
+                    <h2><CalendarClock :size="19" class="section-icon" /> Prochaines échéances</h2>
 
                     <ActivityList :tasks="upcomingTasks" />
 
@@ -187,6 +187,18 @@ import api from "../services/api";
 
 import StatCard from "../components/StatCard.vue";
 import ActivityList from "../components/ActivityList.vue";
+
+import {
+    ClipboardList,
+    FileEdit,
+    Hourglass,
+    CircleCheck,
+    TriangleAlert,
+    Target,
+    Users,
+    Flame,
+    CalendarClock,
+} from "lucide-vue-next";
 
 const router = useRouter();
 
@@ -316,7 +328,7 @@ onMounted(() => {
 
     padding: 32px;
     min-height: 100vh;
-    background: #0f172a;
+    background: var(--bg);
     display: flex;
     flex-direction: column;
     gap: 32px;
@@ -335,7 +347,7 @@ onMounted(() => {
 
 .dashboard-title {
 
-    color: white;
+    color: var(--text-h);
     font-size: 32px;
     font-weight: 800;
 
@@ -344,7 +356,7 @@ onMounted(() => {
 
 .dashboard-subtitle {
 
-    color: #94a3b8;
+    color: var(--text);
     margin-top: 8px;
 
 }
@@ -361,8 +373,8 @@ onMounted(() => {
 
 .dashboard-section {
 
-    background: #1e293b;
-    border: 1px solid #334155;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 20px;
     padding: 24px;
 
@@ -371,7 +383,7 @@ onMounted(() => {
 
 .dashboard-section h2 {
 
-    color: white;
+    color: var(--text-h);
     margin-bottom: 20px;
     font-size: 20px;
 
@@ -399,14 +411,14 @@ onMounted(() => {
 
     padding: 14px 16px;
     text-align: left;
-    border-bottom: 1px solid #334155;
+    border-bottom: 1px solid var(--border);
 
 }
 
 
 .employees-table th {
 
-    color: #94a3b8;
+    color: var(--text);
     font-size: 13px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -416,7 +428,7 @@ onMounted(() => {
 
 .employees-table td {
 
-    color: #cbd5e1;
+    color: var(--text-strong);
     font-size: 15px;
 
 }
@@ -432,14 +444,14 @@ onMounted(() => {
 
 .employee-row:hover {
 
-    background: rgba(37, 99, 235, 0.1);
+    background: var(--accent-soft);
 
 }
 
 
 .employee-name {
 
-    color: white;
+    color: var(--text-h);
     font-weight: 600;
 
 }

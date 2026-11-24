@@ -36,12 +36,14 @@
 
       <div class="task-footer">
 
-        <span>
-          📅 {{ task.due_date || "Aucune date" }}
+        <span class="meta">
+          <CalendarDays :size="14" />
+          {{ task.due_date || "Aucune date" }}
         </span>
 
-        <span>
-          📁 {{ task.project?.name || "Sans projet" }}
+        <span class="meta">
+          <Folder :size="14" />
+          {{ task.project?.name || "Sans projet" }}
         </span>
 
       </div>
@@ -52,6 +54,8 @@
 </template>
 
 <script setup>
+
+import { CalendarDays, Folder } from "lucide-vue-next";
 
 defineProps({
 
@@ -70,7 +74,7 @@ defineProps({
 
   text-align:center;
 
-  color:#94a3b8;
+  color:var(--text);
 
   padding:20px;
 
@@ -78,15 +82,23 @@ defineProps({
 
 .task-card{
 
-  background:#0f172a;
+  background:var(--surface-2);
 
-  border:1px solid #334155;
+  border:1px solid var(--border);
 
-  border-radius:16px;
+  border-radius:var(--radius);
 
   padding:16px;
 
   margin-bottom:14px;
+
+  transition:border-color .2s;
+
+}
+
+.task-card:hover{
+
+  border-color:var(--border-strong);
 
 }
 
@@ -98,23 +110,27 @@ defineProps({
 
   align-items:center;
 
+  gap:12px;
+
 }
 
 .task-header h3{
 
-  color:white;
+  color:var(--text-h);
 
-  font-size:16px;
+  font-size:15px;
 
-  font-weight:700;
+  font-weight:600;
 
 }
 
 .description{
 
-  color:#cbd5e1;
+  color:var(--text-strong);
 
   margin:12px 0;
+
+  font-size:14px;
 
 }
 
@@ -124,9 +140,23 @@ defineProps({
 
   justify-content:space-between;
 
-  color:#94a3b8;
+  gap:12px;
+
+  color:var(--text);
 
   font-size:13px;
+
+}
+
+.meta{
+
+  display:inline-flex;
+
+  align-items:center;
+
+  gap:6px;
+
+  min-width:0;
 
 }
 
@@ -136,17 +166,19 @@ defineProps({
 
   border-radius:999px;
 
-  font-size:12px;
+  font-size:11px;
 
-  font-weight:700;
+  font-weight:600;
 
   text-transform:capitalize;
+
+  flex-shrink:0;
 
 }
 
 .priority.low{
 
-  background:#22c55e33;
+  background:#22c55e1f;
 
   color:#22c55e;
 
@@ -154,7 +186,7 @@ defineProps({
 
 .priority.medium{
 
-  background:#facc1533;
+  background:#facc151f;
 
   color:#facc15;
 
@@ -162,7 +194,7 @@ defineProps({
 
 .priority.high{
 
-  background:#fb923c33;
+  background:#fb923c1f;
 
   color:#fb923c;
 
@@ -170,7 +202,7 @@ defineProps({
 
 .priority.urgent{
 
-  background:#ef444433;
+  background:#ef44441f;
 
   color:#ef4444;
 

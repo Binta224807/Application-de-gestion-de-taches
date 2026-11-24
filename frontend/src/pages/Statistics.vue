@@ -1,4 +1,5 @@
 <script setup>
+import { BarChart3 } from "lucide-vue-next";
 
 import { ref, computed, onMounted } from "vue";
 import api from "../services/api";
@@ -270,7 +271,7 @@ onMounted(()=>{
 
 <h1>
 
-📊 Statistiques
+<BarChart3 :size="24" class="page-icon" /> Statistiques
 
 </h1>
 

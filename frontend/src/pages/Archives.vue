@@ -1,4 +1,5 @@
 <script setup>
+import { Hourglass } from "lucide-vue-next";
 
 import { ref, onMounted } from "vue";
 import api from "../services/api";
@@ -109,7 +110,17 @@ const formatDate = (date) => {
 
 const assignedName = (task) => {
 
-    return task.assigned_to?.username || "Non assigné";
+    const assignees = task.assigned_to || [];
+
+    if (!assignees.length) {
+
+        return "Non assigné";
+
+    }
+
+    return assignees
+        .map((u) => u.username)
+        .join(", ");
 
 };
 
@@ -201,7 +212,7 @@ onMounted(() => {
 
                 <span>� Assignée à : {{ assignedName(task) }}</span>
 
-                <span>⏱️ Durée : {{ formatDuration(task.estimated_duration) }}</span>
+                <span class="meta"><Hourglass :size="14" /> Durée : {{ formatDuration(task.estimated_duration) }}</span>
 
                 <span>�️ Supprimée le : {{ formatDate(task.deleted_at) }}</span>
 

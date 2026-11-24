@@ -10,6 +10,14 @@
 
 
 
+    <Transition name="overlay-fade">
+        <div
+            v-if="sidebarOpen"
+            class="sidebar-overlay"
+            @click="closeSidebar"
+        />
+    </Transition>
+
     <Starfield />
 
     <div class="ambient-glow glow-left"></div>
@@ -56,7 +64,7 @@
 
 <script setup>
 
-import { ref } from "vue";
+import { ref, watch } from "vue";
 
 import Sidebar from "../components/Sidebar.vue";
 import Starfield from '../components/Starfield.vue';
@@ -64,6 +72,10 @@ import Navbar from "../components/Navbar.vue";
 
 
 const sidebarOpen = ref(false);
+
+watch(sidebarOpen, (open) => {
+    document.body.style.overflow = open ? "hidden" : "";
+});
 
 
 const toggleSidebar = () => {
@@ -143,6 +155,54 @@ const handleSearch = (value) => {
   position: relative;
 
   z-index: 1;
+
+}
+
+
+.sidebar-overlay {
+
+  display: none;
+
+}
+
+
+@media (max-width: 900px) {
+
+  .sidebar-overlay {
+
+    display: block;
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 990;
+
+    background: rgba(2, 6, 23, .62);
+
+    backdrop-filter: blur(3px);
+
+    -webkit-backdrop-filter: blur(3px);
+
+  }
+
+}
+
+
+.overlay-fade-enter-active,
+
+.overlay-fade-leave-active {
+
+  transition: opacity .25s ease;
+
+}
+
+
+.overlay-fade-enter-from,
+
+.overlay-fade-leave-to {
+
+  opacity: 0;
 
 }
 

@@ -29,7 +29,7 @@
         :to="item.to"
         class="menu-item anim-slide-right"
         :style="{ animationDelay: item.delay }"
-      >
+       @click="emit('close')">
         <span class="item-index">{{ item.index }}</span>
         <component :is="item.icon" :size="18" :stroke-width="1.8" class="icon" />
         <span class="item-label">{{ item.label }}</span>
@@ -481,52 +481,37 @@ const emit = defineEmits([
 }
 
 
-@media (min-width:769px) and (max-width:900px){
-
-  .sidebar{
-
-    position: fixed;
-
-    left: -300px;
-
-    top: 0;
-
-    z-index: 1000;
-
-    transition: .3s;
-
-  }
-
-  .sidebar.open{
-
-    left: 0;
-
-  }
-
-}
-
-
-@media (max-width:768px){
+@media (max-width:900px){
 
 
   .sidebar{
 
     position: fixed;
 
-    left: -300px;
+    left: 0;
 
     top: 0;
 
+    height: 100dvh;
+
     z-index: 1000;
 
-    transition: .3s;
+    transform: translateX(-105%);
+
+    transition: transform .38s cubic-bezier(.22,1,.36,1);
+
+    padding-top: max(24px, env(safe-area-inset-top));
+
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+
+    box-shadow: 24px 0 60px rgba(0,0,0,.45);
 
   }
 
 
   .sidebar.open{
 
-    left: 0;
+    transform: translateX(0);
 
   }
 

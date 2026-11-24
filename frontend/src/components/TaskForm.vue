@@ -1817,15 +1817,19 @@ textarea {
 
         width: 100%;
 
-        max-height: 100vh;
+        max-height: 100dvh;
 
-        height: 100vh;
+        height: 100dvh;
 
         border-radius: 0;
 
         padding: 20px 16px;
 
+        padding-bottom: max(20px, env(safe-area-inset-bottom));
+
         overflow-y: auto;
+
+        -webkit-overflow-scrolling: touch;
 
         box-sizing: border-box;
     }

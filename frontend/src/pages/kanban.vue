@@ -491,7 +491,23 @@ onMounted(() => {
     .tasks-header {
 
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        padding: 18px;
+
+    }
+
+
+    .tasks-title {
+
+        font-size: 24px;
+
+    }
+
+
+    .new-task-btn {
+
+        justify-content: center;
+        min-height: 46px;
 
     }
 

@@ -156,49 +156,6 @@
             </div>
 
 
-            <!-- PROJET -->
-
-            <div
-                v-if="task.project"
-                class="detail-card project-card"
-                @click="goProject"
-            >
-
-                <h2><Folder :size="18" class="section-icon" /> Projet</h2>
-
-                <div class="project-head">
-
-                    <span class="project-icon">
-                        {{ task.project.icon || "📁" }}
-                    </span>
-
-                    <div class="project-names">
-                        <strong>{{ task.project.name }}</strong>
-                        <small>
-                            {{ task.project.completed_tasks }}/{{ task.project.total_tasks }}
-                            tâches terminées
-                        </small>
-                    </div>
-
-                    <span class="project-pct">
-                        {{ task.project.progress }}%
-                    </span>
-
-                </div>
-
-                <div class="project-bar">
-                    <span
-                        class="project-bar-fill"
-                        :style="{
-                            width: task.project.progress + '%',
-                            background: task.project.color,
-                        }"
-                    />
-                </div>
-
-            </div>
-
-
             <!-- ACTIONS DE STATUT -->
 
             <div class="detail-card status-actions">
@@ -262,7 +219,7 @@ import { useRoute, useRouter } from "vue-router";
 import api from "../services/api";
 import { formatDuration } from "../services/formatDuration.js";
 import TaskForm from "../components/TaskForm.vue";
-import { Pencil, Trash2, FileText, ClipboardList, Folder } from "lucide-vue-next";
+import { Pencil, Trash2, FileText, ClipboardList } from "lucide-vue-next";
 
 
 const route = useRoute();
@@ -380,17 +337,6 @@ const loadTask = async () => {
 const reloadTask = async () => {
 
     await loadTask();
-
-};
-
-
-const goProject = () => {
-
-    if (task.value?.project) {
-
-        router.push(`/projects/${task.value.project.id}`);
-
-    }
 
 };
 
@@ -745,95 +691,6 @@ onMounted(() => {
     font-weight: 600;
     font-size: 14px;
     text-align: right;
-
-}
-
-
-.project-card {
-
-    grid-column: 1 / -1;
-    cursor: pointer;
-    transition: border-color .2s, transform .2s;
-
-}
-
-
-.project-card:hover {
-
-    border-color: var(--accent-border);
-    transform: translateY(-2px);
-
-}
-
-
-.project-head {
-
-    display: flex;
-    align-items: center;
-    gap: 14px;
-
-}
-
-
-.project-icon {
-
-    font-size: 26px;
-
-}
-
-
-.project-names {
-
-    flex: 1;
-    min-width: 0;
-
-}
-
-
-.project-names strong {
-
-    display: block;
-    color: var(--text-h);
-    font-size: 15px;
-
-}
-
-
-.project-names small {
-
-    color: var(--text);
-    font-size: 12px;
-
-}
-
-
-.project-pct {
-
-    font-family: var(--display);
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--accent);
-
-}
-
-
-.project-bar {
-
-    margin-top: 14px;
-    height: 8px;
-    border-radius: 8px;
-    background: rgba(255, 255, 255, 0.08);
-    overflow: hidden;
-
-}
-
-
-.project-bar-fill {
-
-    display: block;
-    height: 100%;
-    border-radius: 8px;
-    transition: width .5s ease;
 
 }
 

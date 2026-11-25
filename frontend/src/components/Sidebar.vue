@@ -144,6 +144,7 @@ import { computed } from "vue";
 import {
   LayoutDashboard,
   ClipboardList,
+  FolderKanban,
   CalendarDays,
   BarChart3,
   Trash2,
@@ -203,6 +204,7 @@ const initial = computed(() => {
 const baseItems = [
   { to: "/dashboard",     label: "Tableau de bord", icon: LayoutDashboard },
   { to: "/tasks",         label: "Gestion tâches",  icon: ClipboardList },
+  { to: "/projects",      label: "Projets",         icon: FolderKanban },
   { to: "/calendar",      label: "Calendrier",      icon: CalendarDays },
   { to: "/statistics",    label: "Statistiques",    icon: BarChart3 },
   { to: "/archives",      label: "Corbeille",       icon: Trash2 },

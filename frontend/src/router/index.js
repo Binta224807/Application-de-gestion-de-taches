@@ -12,6 +12,7 @@ import Notifications from "../pages/Notifications.vue";
 
 import TableauDeBord from "../pages/TableauDeBord.vue";
 import Kanban from "../pages/kanban.vue";
+import Projects from "../pages/Projects.vue";
 import ProjectDetail from "../pages/ProjectDetail.vue";
 
 
@@ -56,6 +57,15 @@ const routes = [
     path: "/tasks/:id",
     name: "TaskDetail",
     component: TaskDetail,
+    meta: {
+      requiresAuth: true
+    }
+  },
+
+  {
+    path: "/projects",
+    name: "Projects",
+    component: Projects,
     meta: {
       requiresAuth: true
     }

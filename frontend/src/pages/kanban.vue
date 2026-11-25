@@ -105,6 +105,14 @@
             {{ isCEO ? "Cliquez sur Nouvelle tâche pour commencer." : "Aucune tâche ne vous est assignée pour le moment." }}
         </p>
 
+        <button
+            v-if="otherSpace"
+            class="space-hint"
+            @click="switchToOther"
+        >
+            Voir l'espace « {{ otherSpace.type === "personal" ? "Personnel" : otherSpace.name }} »
+        </button>
+
     </div>
 
 
@@ -146,9 +154,26 @@ const showTaskForm = ref(false);
 const searchQuery = ref("");
 const statusFilter = ref("");
 
-import { isAdmin, spaceName } from "../services/space";
+import { isAdmin, spaceName, spaceState, setSpace } from "../services/space";
 const isCEO = isAdmin;
 const companyName = spaceName;
+
+// Autre espace dispo (pour l'indice quand la liste est vide)
+const otherSpace = computed(() =>
+    spaceState.spaces.find(
+        (s) => String(s.id) !== String(spaceState.current)
+    )
+);
+
+const switchToOther = () => {
+
+    if (otherSpace.value) {
+
+        setSpace(otherSpace.value.id);
+
+    }
+
+};
 
 
 // =======================================================
@@ -471,6 +496,31 @@ onMounted(() => {
     background: var(--surface);
     border-radius: 20px;
     border: 1px solid var(--border);
+
+}
+
+
+.space-hint {
+
+    margin-top: 18px;
+    border: 1px solid var(--accent-border);
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .2s;
+
+}
+
+
+.space-hint:hover {
+
+    background: var(--accent);
+    color: white;
 
 }
 

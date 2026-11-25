@@ -1,5 +1,5 @@
 <script setup>
-import { Hourglass } from "lucide-vue-next";
+import { Hourglass, Trash2, RotateCcw, User, CalendarX } from "lucide-vue-next";
 
 import { ref, onMounted } from "vue";
 import api from "../services/api";
@@ -144,7 +144,7 @@ onMounted(() => {
     <div class="trash-header">
 
         <div>
-            <h1>�️ Corbeille</h1>
+            <h1><Trash2 :size="26" class="page-icon" /> Corbeille</h1>
             <p>Retrouvez les tâches supprimées.</p>
         </div>
 
@@ -172,7 +172,7 @@ onMounted(() => {
         class="empty"
     >
 
-        <span>�️</span>
+        <Trash2 :size="52" class="empty-icon" />
         <h2>Corbeille vide</h2>
         <p>Les tâches supprimées apparaîtront ici.</p>
 
@@ -189,43 +189,43 @@ onMounted(() => {
         <div
             v-for="task in tasks"
             :key="task.id"
-            class="trash-card"
+            class="trash-row"
         >
 
-            <div class="card-top">
+            <div class="row-main">
 
                 <h3>{{ task.title }}</h3>
 
-                <span class="status-badge">
-                    {{ task.status }}
-                </span>
+                <div class="row-meta">
+
+                    <span class="status-badge">
+                        {{ task.status }}
+                    </span>
+
+                    <span class="meta-item">
+                        <User :size="13" /> {{ assignedName(task) }}
+                    </span>
+
+                    <span class="meta-item">
+                        <Hourglass :size="13" /> {{ formatDuration(task.estimated_duration) }}
+                    </span>
+
+                    <span class="meta-item">
+                        <CalendarX :size="13" /> {{ formatDate(task.deleted_at) }}
+                    </span>
+
+                </div>
 
             </div>
 
 
-            <p class="description">
-                {{ task.description || "Aucune description" }}
-            </p>
-
-
-            <div class="infos">
-
-                <span>� Assignée à : {{ assignedName(task) }}</span>
-
-                <span class="meta"><Hourglass :size="14" /> Durée : {{ formatDuration(task.estimated_duration) }}</span>
-
-                <span>�️ Supprimée le : {{ formatDate(task.deleted_at) }}</span>
-
-            </div>
-
-
-            <div class="actions">
+            <div class="row-actions">
 
                 <button
                     class="restore"
                     @click="restoreTask(task)"
                 >
-                    ♻ Restaurer
+                    <RotateCcw :size="14" /> Restaurer
                 </button>
 
                 <button
@@ -233,11 +233,8 @@ onMounted(() => {
                     :disabled="deleting === task.id"
                     @click="deleteTask(task)"
                 >
-                    {{
-                        deleting === task.id
-                        ? "Suppression..."
-                        : "Supprimer définitivement"
-                    }}
+                    <Trash2 :size="14" />
+                    {{ deleting === task.id ? "..." : "Supprimer" }}
                 </button>
 
             </div>
@@ -282,6 +279,24 @@ onMounted(() => {
     margin: 0;
     font-size: 32px;
     font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+}
+
+
+.page-icon {
+
+    color: var(--accent);
+
+}
+
+
+.empty-icon {
+
+    color: var(--text);
+    opacity: .5;
 
 }
 
@@ -354,114 +369,116 @@ onMounted(() => {
 
 .trash-list {
 
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 25px;
-
-}
-
-
-.trash-card {
-
-    background: var(--surface-2);
-    border: 1px solid #334155;
-    border-radius: 24px;
-    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    transition: .25s;
+    gap: 10px;
 
 }
 
 
-.trash-card:hover {
-
-    transform: translateY(-5px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, .35);
-
-}
-
-
-.card-top {
+.trash-row {
 
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: flex-start;
-    gap: 15px;
+    gap: 16px;
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px 18px;
+    transition: .2s;
 
 }
 
 
-.card-top h3 {
+.trash-row:hover {
 
-    margin: 0;
-    font-size: 20px;
-    font-weight: 750;
+    border-color: var(--accent-border);
+    transform: translateX(4px);
+
+}
+
+
+.row-main {
+
+    min-width: 0;
+    flex: 1;
+
+}
+
+
+.row-main h3 {
+
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-h);
+
+}
+
+
+.row-meta {
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 
 }
 
 
 .status-badge {
 
-    padding: 6px 12px;
+    padding: 4px 10px;
     border-radius: 999px;
-    background: #334155;
-    font-size: 12px;
-    color: #cbd5e1;
+    background: var(--surface-3);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-strong);
     text-transform: uppercase;
 
 }
 
 
-.description {
+.meta-item {
 
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
     color: var(--text);
-    line-height: 1.6;
-    font-size: 14px;
+    background: var(--surface-2);
+    padding: 4px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
 
 }
 
 
-.infos {
+.row-actions {
 
     display: flex;
-    flex-direction: column;
-    gap: 10px;
-    color: #cbd5e1;
-    font-size: 14px;
+    gap: 8px;
+    flex-shrink: 0;
 
 }
 
 
-.infos span {
+.row-actions button {
 
-    background: var(--surface);
-    padding: 10px 14px;
-    border-radius: 12px;
-
-}
-
-
-.actions {
-
-    display: flex;
-    gap: 12px;
-    margin-top: auto;
-
-}
-
-
-.actions button {
-
-    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
     border: none;
-    padding: 13px;
-    border-radius: 14px;
+    padding: 10px 16px;
+    border-radius: 10px;
     cursor: pointer;
-    font-weight: 700;
-    transition: .25s;
+    font-weight: 600;
+    font-size: 13px;
+    transition: .2s;
     color: white;
+    white-space: nowrap;
 
 }
 
@@ -517,9 +534,24 @@ onMounted(() => {
 
     }
 
-    .actions {
+    .trash-row {
 
         flex-direction: column;
+        align-items: stretch;
+
+    }
+
+    .row-actions {
+
+        width: 100%;
+
+    }
+
+    .row-actions button {
+
+        flex: 1;
+        justify-content: center;
+        min-height: 42px;
 
     }
 

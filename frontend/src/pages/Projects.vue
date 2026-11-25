@@ -15,7 +15,14 @@ const COLORS = [
     "#f59e0b", "#ef4444", "#ec4899", "#8b5cf6",
 ];
 
-const ICONS = ["📁", "🚀", "💼", "🎯", "📊", "🏠", "💡", "🔧", "📱", "🌐"];
+const ICONS = [
+    "📁", "🚀", "💼", "🎯", "📊", "📈", "🗂️", "📋",
+    "🏠", "🏢", "🏗️", "🛒", "💰", "💳", "🧾", "📦",
+    "💡", "🔧", "⚙️", "🔬", "🧪", "🎨", "✏️", "📐",
+    "📱", "💻", "🌐", "☁️", "🔒", "🤖", "📡", "🖥️",
+    "📚", "🎓", "🏥", "⚖️", "🌱", "🍽️", "✈️", "🏆",
+    "🎵", "🎬", "📷", "🎮", "⚽", "🏋️", "🧘", "🎁",
+];
 
 const showForm = ref(false);
 const saving = ref(false);
@@ -598,14 +605,16 @@ onMounted(loadProjects);
 }
 
 .icon-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
     gap: 6px;
-    flex-wrap: wrap;
+    max-height: 132px;
+    overflow-y: auto;
+    padding: 2px;
 }
 
 .icon-choice {
-    width: 40px;
-    height: 40px;
+    aspect-ratio: 1;
     border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--surface-2);
@@ -613,6 +622,9 @@ onMounted(loadProjects);
     cursor: pointer;
     transition: border-color 0.15s, transform 0.15s;
     padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .icon-choice:hover {

@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.contrib.auth.models import User
 from django.db.models import Avg, Count, Q
 from django.utils import timezone
@@ -1350,8 +1352,16 @@ class DashboardAPIView(APIView):
             "-updated_at"
         )[:5]
 
+        # Échéances imminentes : uniquement J-1 (aujourd'hui ou demain),
+        # hors tâches terminées. Les retards ont leur propre section.
+
+        today = timezone.localdate()
+
         upcoming_tasks = active_tasks.filter(
-            due_date__isnull=False
+            due_date__gte=today,
+            due_date__lte=today + timedelta(days=1),
+        ).exclude(
+            status=TaskStatus.DONE
         ).order_by(
             "due_date"
         )[:5]

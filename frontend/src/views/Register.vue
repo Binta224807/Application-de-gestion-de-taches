@@ -44,17 +44,63 @@
           class="input"
         />
 
-        <input
-          v-model="form.invite_code"
-          type="text"
-          placeholder="Code d'invitation (optionnel)"
-          class="input"
-        />
+        <div class="mode-grid">
+          <button
+            type="button"
+            class="mode-btn"
+            :class="{ active: form.mode === 'personal' }"
+            @click="form.mode = 'personal'"
+          >
+            Particulier
+          </button>
+
+          <button
+            type="button"
+            class="mode-btn"
+            :class="{ active: form.mode === 'org' }"
+            @click="form.mode = 'org'"
+          >
+            Organisation
+          </button>
+        </div>
 
         <p class="text-slate-400 text-xs">
-          Sans code, votre espace personnel est créé. Vous pourrez
-          créer ou rejoindre une organisation à tout moment.
+          <template v-if="form.mode === 'personal'">
+            Espace personnel privé. Vous pourrez créer une
+            organisation plus tard.
+          </template>
+          <template v-else>
+            Vous serez le responsable : c'est vous qui créerez
+            les comptes de vos employés.
+          </template>
         </p>
+
+        <div
+          v-if="form.mode === 'org'"
+          class="space-y-4"
+        >
+          <input
+            v-model="form.company_name"
+            type="text"
+            placeholder="Nom de l'organisation"
+            class="input"
+            required
+          />
+
+          <input
+            v-model="form.title"
+            type="text"
+            placeholder="Votre titre (ex. Directeur, Responsable)"
+            class="input"
+          />
+
+          <textarea
+            v-model="form.company_description"
+            placeholder="Description (optionnel)"
+            class="input"
+            rows="2"
+          />
+        </div>
 
         <button
           type="submit"
@@ -108,7 +154,10 @@ const form = reactive({
   email: "",
   password: "",
   password_confirmation: "",
-  invite_code: "",
+  mode: "personal",
+  company_name: "",
+  company_description: "",
+  title: "",
 });
 
 const register = async () => {
@@ -128,15 +177,22 @@ const register = async () => {
   try {
     loading.value = true;
 
+    if (form.mode === "org" && !form.company_name.trim()) {
+      error.value = "Le nom de l'organisation est obligatoire.";
+      return;
+    }
+
     const payload = {
       username: form.username,
       email: form.email,
       password: form.password,
       password_confirmation: form.password_confirmation,
+      title: form.title,
     };
 
-    if (form.invite_code.trim()) {
-      payload.invite_code = form.invite_code.trim();
+    if (form.mode === "org") {
+      payload.company_name = form.company_name;
+      payload.company_description = form.company_description;
     }
 
     await api.post("auth/register/", payload);
@@ -147,7 +203,9 @@ const register = async () => {
     form.email = "";
     form.password = "";
     form.password_confirmation = "";
-    form.invite_code = "";
+    form.company_name = "";
+    form.company_description = "";
+    form.title = "";
 
     setTimeout(() => {
       window.location.href = "/login";
@@ -233,5 +291,33 @@ select.input {
 textarea.input {
   resize: none;
   min-height: 80px;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.mode-btn {
+  padding: 11px;
+  border-radius: 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.mode-btn:hover {
+  border-color: #6366f1;
+}
+
+.mode-btn.active {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: #6366f1;
+  color: white;
 }
 </style>

@@ -423,7 +423,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        methods=["get", "patch"]
+        methods=["get", "patch", "post"]
     )
     def members(self, request, pk=None):
 
@@ -455,6 +455,62 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 {"error": "Action réservée aux administrateurs."},
                 status=status.HTTP_403_FORBIDDEN
             )
+
+        # POST : le responsable crée un compte employé
+
+        if request.method == "POST":
+
+            username = request.data.get("username", "").strip()
+            password = request.data.get("password", "")
+
+            if not username or not password:
+
+                return Response(
+                    {"error": "Identifiant et mot de passe requis."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if User.objects.filter(
+                username=username
+            ).exists():
+
+                return Response(
+                    {"error": "Cet identifiant existe déjà."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            member_user = User.objects.create_user(
+                username=username,
+                email=request.data.get("email", ""),
+                password=password
+            )
+
+            profile = UserProfile.objects.create(
+                user=member_user,
+                company=company,
+                role=UserRole.EMPLOYEE,
+                is_admin=bool(
+                    request.data.get("is_admin")
+                ),
+                title=(
+                    request.data.get("title")
+                    or "Membre"
+                )
+            )
+
+            return Response({
+                "message": f"Compte créé pour {username}.",
+                "member": {
+                    "id": member_user.id,
+                    "profile_id": profile.id,
+                    "username": member_user.username,
+                    "title": profile.title,
+                    "is_admin": profile.is_admin,
+                    "is_owner": False,
+                },
+            }, status=status.HTTP_201_CREATED)
+
+        # PATCH : modification titre / admin
 
         from django.shortcuts import get_object_or_404
 

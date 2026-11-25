@@ -27,21 +27,6 @@
                     </span>
                 </div>
 
-                <div v-if="isAdmin" class="invite-row">
-                    <div>
-                        <label>Code d'invitation</label>
-                        <p class="muted">
-                            Partagez ce code pour inviter des membres
-                        </p>
-                    </div>
-                    <div class="invite-code">
-                        <code>{{ company.invite_code }}</code>
-                        <button class="btn-ghost" @click="copyCode">
-                            <Copy :size="14" /> Copier
-                        </button>
-                    </div>
-                </div>
-
                 <button
                     v-if="!isOwner"
                     class="btn-danger-ghost"
@@ -57,6 +42,47 @@
                     <Users :size="18" /> Membres
                     <span class="count">{{ members.length }}</span>
                 </h3>
+
+                <form
+                    v-if="isAdmin"
+                    class="add-member"
+                    @submit.prevent="addMember"
+                >
+                    <input
+                        v-model="newMember.username"
+                        placeholder="Identifiant"
+                        required
+                    />
+                    <input
+                        v-model="newMember.password"
+                        type="text"
+                        placeholder="Mot de passe"
+                        required
+                    />
+                    <input
+                        v-model="newMember.title"
+                        placeholder="Titre (ex. Employé, Technicien)"
+                    />
+                    <label class="admin-toggle">
+                        <input
+                            v-model="newMember.is_admin"
+                            type="checkbox"
+                        />
+                        Admin
+                    </label>
+                    <button class="btn-primary" type="submit">
+                        <UserPlus :size="15" /> Créer le compte
+                    </button>
+                </form>
+
+                <p
+                    v-if="createdCreds"
+                    class="creds-box"
+                >
+                    Compte créé — transmettez ces identifiants :
+                    <strong>{{ createdCreds.username }}</strong> /
+                    <strong>{{ createdCreds.password }}</strong>
+                </p>
 
                 <div class="member-list">
                     <div
@@ -141,26 +167,6 @@
                     </form>
                 </div>
 
-                <div class="choice-card">
-                    <UserPlus :size="28" class="choice-icon" />
-                    <h3>Rejoindre une organisation</h3>
-                    <p>
-                        Vous avez reçu un code d'invitation ?
-                        Entrez-le ici.
-                    </p>
-
-                    <form @submit.prevent="joinOrg">
-                        <input
-                            v-model="joinCode"
-                            placeholder="CODE D'INVITATION"
-                            class="code-input"
-                            required
-                        />
-                        <button class="btn-primary" type="submit">
-                            Rejoindre
-                        </button>
-                    </form>
-                </div>
             </div>
         </template>
 
@@ -176,7 +182,7 @@ import { useRouter } from "vue-router";
 import api from "../services/api";
 import { spaceState, isAdmin, setSpace } from "../services/space";
 import {
-    Building2, Users, Copy, LogOut, PlusCircle, UserPlus,
+    Building2, Users, LogOut, PlusCircle, UserPlus,
 } from "lucide-vue-next";
 
 const router = useRouter();
@@ -192,7 +198,13 @@ const createForm = ref({
     description: "",
     kind: "organization",
 });
-const joinCode = ref("");
+const newMember = ref({
+    username: "",
+    password: "",
+    title: "",
+    is_admin: false,
+});
+const createdCreds = ref(null);
 const message = ref("");
 const isError = ref(false);
 
@@ -236,15 +248,27 @@ const createOrg = async () => {
     }
 };
 
-const joinOrg = async () => {
+const addMember = async () => {
     try {
-        const { data } = await api.post("companies/join/", {
-            invite_code: joinCode.value,
-        });
-        setSpace(data.company.id);
+        await api.post(
+            `companies/${company.value.id}/members/`,
+            newMember.value
+        );
+        createdCreds.value = {
+            username: newMember.value.username,
+            password: newMember.value.password,
+        };
+        newMember.value = {
+            username: "",
+            password: "",
+            title: "",
+            is_admin: false,
+        };
+        notify("Compte employé créé.");
+        await loadCompany();
     } catch (e) {
         notify(
-            e.response?.data?.error || "Code invalide.",
+            e.response?.data?.error || "Création impossible.",
             true
         );
     }
@@ -273,13 +297,6 @@ const updateMember = async (member, patch) => {
     } catch {
         notify("Modification refusée.", true);
     }
-};
-
-const copyCode = async () => {
-    await navigator.clipboard.writeText(
-        company.value.invite_code
-    );
-    notify("Code copié !");
 };
 
 onMounted(loadCompany);
@@ -354,39 +371,41 @@ onMounted(loadCompany);
     white-space: nowrap;
 }
 
-.invite-row {
+.add-member {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
     flex-wrap: wrap;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-}
-
-.invite-row label {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-h);
-}
-
-.invite-code {
-    display: flex;
-    align-items: center;
     gap: 10px;
+    align-items: center;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border);
 }
 
-.invite-code code {
+.add-member input {
     background: var(--surface-2);
-    border: 1px dashed var(--accent-border);
-    padding: 8px 16px;
+    border: 1px solid var(--border);
     border-radius: 10px;
-    font-size: 17px;
-    letter-spacing: 3px;
-    color: var(--accent);
+    padding: 9px 12px;
+    color: var(--text-h);
+    font-family: inherit;
+    font-size: 13px;
+    flex: 1;
+    min-width: 130px;
+}
+
+.add-member input:focus {
+    outline: none;
+    border-color: var(--accent-border);
+}
+
+.creds-box {
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 13px;
+    margin: 0 0 14px;
 }
 
 .btn-ghost,
@@ -579,13 +598,6 @@ onMounted(loadCompany);
 .choice-card select:focus {
     outline: none;
     border-color: var(--accent-border);
-}
-
-.code-input {
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    text-align: center;
-    font-weight: 700;
 }
 
 .message {

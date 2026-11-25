@@ -214,7 +214,7 @@ const menuItems = computed(() => {
 
   const items = [...baseItems];
 
-  if (!isPersonal.value) {
+  if (!isPersonal.value && isAdmin.value) {
 
     items.push({
       to: "/company",

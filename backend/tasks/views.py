@@ -84,9 +84,7 @@ def create_notification(
     return notification
 
 
-def notify_task_assigned(task, recipients=None):
-
-    sender = task.user
+def notify_task_assigned(task, actor, recipients=None):
 
     if recipients is None:
 
@@ -94,60 +92,151 @@ def notify_task_assigned(task, recipients=None):
 
     for recipient in recipients:
 
-        if recipient == sender:
+        if recipient == actor:
 
             continue
 
         create_notification(
             title="Nouvelle tâche assignée",
             message=(
-                f"Le PDG vous a assigné une nouvelle tâche : {task.title}."
+                f"{actor.username} vous a assigné la tâche « {task.title} »."
             ),
             recipient=recipient,
-            sender=sender,
+            sender=actor,
             task=task,
             notification_type=NotificationType.INFO,
         )
 
 
-def notify_status_change(task, previous_status, employee):
+def notify_task_unassigned(task, actor, recipients):
 
-    company = task.company
+    for recipient in recipients:
 
-    if not company:
+        if recipient == actor:
 
-        return
-
-    ceo = company.owner
-
-    if not ceo:
-
-        return
-
-    if task.status == TaskStatus.IN_PROGRESS and previous_status == TaskStatus.TODO:
+            continue
 
         create_notification(
-            title="Tâche commencée",
+            title="Tâche retirée",
             message=(
-                f"{employee.username} a commencé la tâche : {task.title}."
+                f"{actor.username} vous a retiré de la tâche « {task.title} »."
             ),
-            recipient=ceo,
-            sender=employee,
+            recipient=recipient,
+            sender=actor,
             task=task,
-            notification_type=NotificationType.SUCCESS,
+            notification_type=NotificationType.WARNING,
         )
 
-    elif task.status == TaskStatus.DONE and previous_status != TaskStatus.DONE:
+
+_STATUS_NOTIF = {
+
+    TaskStatus.IN_PROGRESS: (
+        "Tâche commencée",
+        "a commencé",
+        NotificationType.INFO,
+    ),
+
+    TaskStatus.DONE: (
+        "Tâche terminée",
+        "a terminé",
+        NotificationType.SUCCESS,
+    ),
+
+    TaskStatus.REVIEW: (
+        "Tâche à vérifier",
+        "a mis en vérification",
+        NotificationType.INFO,
+    ),
+
+    TaskStatus.TODO: (
+        "Tâche remise à faire",
+        "a remis à faire",
+        NotificationType.WARNING,
+    ),
+
+}
+
+
+def _task_watchers(task, actor):
+
+    # Personnes concernées par la tâche : créateur (assigneur)
+    # + assignés, sauf l'auteur de l'action.
+
+    watchers = {task.user, *task.assigned_to.all()}
+
+    watchers.discard(actor)
+
+    return watchers
+
+
+def notify_status_change(task, previous_status, actor):
+
+    if task.status == previous_status:
+
+        return
+
+    spec = _STATUS_NOTIF.get(task.status)
+
+    if not spec:
+
+        return
+
+    title, verb, notif_type = spec
+
+    for recipient in _task_watchers(task, actor):
 
         create_notification(
-            title="Tâche terminée",
+            title=title,
             message=(
-                f"{employee.username} a terminé la tâche : {task.title}."
+                f"{actor.username} {verb} la tâche « {task.title} »."
             ),
-            recipient=ceo,
-            sender=employee,
+            recipient=recipient,
+            sender=actor,
             task=task,
-            notification_type=NotificationType.SUCCESS,
+            notification_type=notif_type,
+        )
+
+
+_TRACKED_FIELDS = {
+
+    "title": "le titre",
+    "description": "la description",
+    "due_date": "l'échéance",
+    "priority": "la priorité",
+
+}
+
+
+def notify_task_updated(task, actor, changed_fields):
+
+    labels = [
+        _TRACKED_FIELDS[f]
+        for f in changed_fields
+        if f in _TRACKED_FIELDS
+    ]
+
+    if not labels:
+
+        return
+
+    watchers = _task_watchers(task, actor)
+
+    if not watchers:
+
+        return
+
+    for recipient in watchers:
+
+        create_notification(
+            title="Tâche modifiée",
+            message=(
+                f"{actor.username} a modifié "
+                f"{', '.join(labels)} de la tâche « {task.title} »."
+            ),
+            recipient=recipient,
+            sender=actor,
+            task=task,
+            notification_type=NotificationType.INFO,
         )
 
 
@@ -864,7 +953,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if company is not None:
 
-            notify_task_assigned(task)
+            notify_task_assigned(
+                task,
+                self.request.user
+            )
 
     def perform_update(self, serializer):
 
@@ -872,23 +964,58 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         previous_status = task.status
 
+        previous_values = {
+            f: getattr(task, f)
+            for f in _TRACKED_FIELDS
+        }
+
         previous_assigned = set(
             task.assigned_to.values_list("pk", flat=True)
         )
 
         task = serializer.save()
 
-        # Notification si nouvelle assignation
+        # Nouvelles assignations
 
         new_assignees = task.assigned_to.exclude(
             pk__in=previous_assigned
-        ).exclude(
-            pk=self.request.user.pk
         )
 
-        notify_task_assigned(task, new_assignees)
+        notify_task_assigned(
+            task,
+            self.request.user,
+            new_assignees
+        )
 
-        # Notification si changement de statut
+        # Désassignations
+
+        removed_assignees = User.objects.filter(
+            pk__in=previous_assigned
+        ).exclude(
+            pk__in=task.assigned_to.values_list("pk", flat=True)
+        )
+
+        notify_task_unassigned(
+            task,
+            self.request.user,
+            removed_assignees
+        )
+
+        # Champs suivis modifiés
+
+        changed_fields = [
+            f
+            for f in _TRACKED_FIELDS
+            if getattr(task, f) != previous_values[f]
+        ]
+
+        notify_task_updated(
+            task,
+            self.request.user,
+            changed_fields
+        )
+
+        # Changement de statut
 
         if task.status != previous_status:
 

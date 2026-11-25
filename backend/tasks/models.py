@@ -600,7 +600,7 @@ class Task(models.Model):
 
         Project,
 
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
 
         related_name="tasks",
 

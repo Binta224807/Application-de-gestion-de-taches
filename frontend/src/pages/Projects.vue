@@ -3,7 +3,7 @@ import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import api from "../services/api";
 import { spaceName } from "../services/space";
-import { FolderKanban, Star, CircleCheck, Plus, X } from "lucide-vue-next";
+import { FolderKanban, Star, CircleCheck, Plus, X, Trash2 } from "lucide-vue-next";
 
 const router = useRouter();
 
@@ -89,6 +89,25 @@ const createProject = async () => {
 
 const goProject = (id) => router.push(`/projects/${id}`);
 
+const deleteProject = async (project) => {
+    const tasksInfo = project.total_tasks
+        ? ` Ses ${project.total_tasks} tâche(s) seront conservées sans projet.`
+        : "";
+
+    if (!confirm(`Supprimer le projet « ${project.name} » ?${tasksInfo}`)) {
+        return;
+    }
+
+    try {
+        await api.delete(`projects/${project.id}/`);
+        projects.value = projects.value.filter(
+            (p) => p.id !== project.id
+        );
+    } catch (error) {
+        console.error("Erreur suppression projet :", error);
+    }
+};
+
 onMounted(loadProjects);
 </script>
 
@@ -142,6 +161,14 @@ onMounted(loadProjects);
                     :size="15"
                     class="fav-icon"
                 />
+
+                <button
+                    class="delete-project"
+                    title="Supprimer le projet"
+                    @click.stop="deleteProject(p)"
+                >
+                    <Trash2 :size="15" />
+                </button>
 
             </div>
 
@@ -396,6 +423,31 @@ onMounted(loadProjects);
 .fav-icon {
     color: var(--warning);
     flex-shrink: 0;
+}
+
+.delete-project {
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: 0.2s;
+}
+
+.project-card:hover .delete-project {
+    opacity: 1;
+}
+
+.delete-project:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
 }
 
 /* PROGRESSION */
@@ -702,6 +754,10 @@ onMounted(loadProjects);
         width: 100%;
         justify-content: center;
         min-height: 46px;
+    }
+
+    .delete-project {
+        opacity: 1;
     }
 
     .modal-overlay {

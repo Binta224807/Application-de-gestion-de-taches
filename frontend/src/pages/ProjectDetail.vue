@@ -11,6 +11,7 @@ import {
     Star,
     CalendarDays,
     User,
+    Trash2,
 } from "lucide-vue-next";
 
 const route = useRoute();
@@ -79,6 +80,24 @@ const filteredTasks = computed(() =>
 
 const goTask = (id) => router.push(`/tasks/${id}`);
 
+const deleteProject = async () => {
+    const n = tasks.value.length;
+    const info = n
+        ? ` Ses ${n} tâche(s) seront conservées sans projet.`
+        : "";
+
+    if (!confirm(`Supprimer le projet « ${project.value.name} » ?${info}`)) {
+        return;
+    }
+
+    try {
+        await api.delete(`projects/${project.value.id}/`);
+        router.push("/projects");
+    } catch (error) {
+        console.error("Erreur suppression projet :", error);
+    }
+};
+
 onMounted(loadAll);
 </script>
 
@@ -116,9 +135,17 @@ onMounted(loadAll);
 
             </div>
 
-            <span v-if="project.is_favorite" class="favorite">
-                <Star :size="14" /> Favori
-            </span>
+            <div class="header-side">
+
+                <span v-if="project.is_favorite" class="favorite">
+                    <Star :size="14" /> Favori
+                </span>
+
+                <button class="delete-btn" @click="deleteProject">
+                    <Trash2 :size="14" /> Supprimer
+                </button>
+
+            </div>
 
         </header>
 
@@ -342,6 +369,13 @@ onMounted(loadAll);
     font-size: 13px;
 }
 
+.header-side {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
 .favorite {
     display: inline-flex;
     align-items: center;
@@ -353,6 +387,27 @@ onMounted(loadAll);
     padding: 6px 12px;
     border-radius: 999px;
     white-space: nowrap;
+}
+
+.delete-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.delete-btn:hover {
+    background: var(--danger);
+    color: white;
 }
 
 /* PROGRESSION */

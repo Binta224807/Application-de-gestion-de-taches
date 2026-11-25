@@ -245,7 +245,7 @@ const register = async () => {
 .glow-a {
   top: -140px;
   left: -120px;
-  background: #2563eb;
+  background: var(--accent-strong);
 }
 
 .glow-b {
@@ -265,7 +265,7 @@ const register = async () => {
   width: 100%;
   padding: 12px 16px;
   border-radius: 12px;
-  background: #1e293b;
+  background: var(--surface-2);
   border: 1px solid #334155;
   color: white;
   outline: none;
@@ -280,7 +280,7 @@ const register = async () => {
 }
 
 .input::placeholder {
-  color: #94a3b8;
+  color: var(--text);
 }
 
 select.input {
@@ -302,9 +302,9 @@ textarea.input {
 .mode-btn {
   padding: 11px;
   border-radius: 12px;
-  background: #1e293b;
+  background: var(--surface-2);
   border: 1px solid #334155;
-  color: #94a3b8;
+  color: var(--text);
   font-weight: 600;
   font-size: 14px;
   cursor: pointer;

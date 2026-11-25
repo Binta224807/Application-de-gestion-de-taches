@@ -219,7 +219,7 @@ const allowDrop = (event) => {
 
 .column-header span {
 
-  background: #2563eb;
+  background: var(--accent-strong);
 
   color: white;
 
@@ -253,7 +253,7 @@ const allowDrop = (event) => {
 
   border-radius: 15px;
 
-  color: #94a3b8;
+  color: var(--text);
 
 }
 

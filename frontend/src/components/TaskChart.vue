@@ -293,7 +293,7 @@ const moveTask = (status) => {
 
   box-sizing: border-box;
 
-  background: #111827;
+  background: var(--surface);
 
   border: 1px solid rgba(255,255,255,.08);
 
@@ -321,7 +321,7 @@ const moveTask = (status) => {
 
   transform: translateY(-5px);
 
-  border-color: #2563eb;
+  border-color: var(--accent-strong);
 
   box-shadow:
     0 10px 25px rgba(37,99,235,.25);
@@ -444,7 +444,7 @@ const moveTask = (status) => {
 
   margin: 0;
 
-  color: #94a3b8;
+  color: var(--text);
 
   font-size: 14px;
 
@@ -589,7 +589,7 @@ const moveTask = (status) => {
 
 .edit {
 
-  background: #2563eb;
+  background: var(--accent-strong);
 
   color: white;
 
@@ -598,7 +598,7 @@ const moveTask = (status) => {
 
 .edit:hover {
 
-  background: #1d4ed8;
+  background: var(--accent-strong);
 
 }
 

@@ -1,735 +1,636 @@
 <script setup>
-import { CalendarDays, Folder } from "lucide-vue-next";
-
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import api from "../services/api";
+import {
+    CalendarDays,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    Folder,
+    User,
+} from "lucide-vue-next";
 
+const router = useRouter();
 
 const tasks = ref([]);
-
 const loading = ref(true);
+const currentDate = ref(new Date());
+const selectedDay = ref(null);
 
+const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-const currentDate = ref(
-    new Date()
-);
+const PRIORITY_COLORS = {
+    low: "#22c55e",
+    medium: "#f59e0b",
+    high: "#ef4444",
+    urgent: "#dc2626",
+};
 
-
-// ===============================
-// CHARGEMENT CALENDRIER
-// ===============================
+const STATUS_LABELS = {
+    todo: "À faire",
+    in_progress: "En cours",
+    review: "À vérifier",
+    done: "Terminée",
+};
 
 const loadCalendar = async () => {
-
     try {
-
         loading.value = true;
-
-        const response = await api.get(
-            "calendar/"
-        );
-
+        const response = await api.get("calendar/");
         tasks.value = response.data;
-
-    }
-
-    catch(error){
-
-        console.error(
-            "Erreur calendrier :",
-            error.response?.data || error
-        );
-
-    }
-
-    finally{
-
+    } catch (error) {
+        console.error("Erreur calendrier :", error);
+    } finally {
         loading.value = false;
-
     }
-
 };
 
+const monthName = computed(() =>
+    currentDate.value.toLocaleDateString("fr-FR", {
+        month: "long",
+        year: "numeric",
+    })
+);
 
-// ===============================
-// MOIS ACTUEL
-// ===============================
+// Date locale YYYY-MM-DD (évite le décalage UTC de toISOString)
+const localISO = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+        d.getDate()
+    ).padStart(2, "0")}`;
 
-const monthName = computed(()=>{
+const todayISO = localISO(new Date());
 
-    return currentDate.value.toLocaleDateString(
-        "fr-FR",
-        {
-            month:"long",
-            year:"numeric"
-        }
-    );
+// Cellules : cases vides (décalage lundi) + jours du mois
+const cells = computed(() => {
+    const year = currentDate.value.getFullYear();
+    const month = currentDate.value.getMonth();
 
-});
+    const firstDay = new Date(year, month, 1);
+    const offset = (firstDay.getDay() + 6) % 7;
+    const total = new Date(year, month + 1, 0).getDate();
 
+    const result = Array(offset).fill(null);
 
-// ===============================
-// JOURS DU MOIS
-// ===============================
-
-const days = computed(()=>{
-
-    const year =
-        currentDate.value.getFullYear();
-
-    const month =
-        currentDate.value.getMonth();
-
-
-    const firstDay =
-        new Date(
-            year,
-            month,
-            1
-        );
-
-
-    const lastDay =
-        new Date(
-            year,
-            month + 1,
-            0
-        );
-
-
-    const result = [];
-
-
-    for(
-        let i = 1;
-        i <= lastDay.getDate();
-        i++
-    ){
-
-        const date =
-            new Date(
-                year,
-                month,
-                i
-            );
-
-
-        result.push(date);
-
+    for (let i = 1; i <= total; i++) {
+        result.push(new Date(year, month, i));
     }
-
 
     return result;
-
 });
 
+const tasksByDay = (day) => {
+    if (!day) return [];
+    const iso = localISO(day);
+    return tasks.value.filter((t) => t.date === iso);
+};
 
-// ===============================
-// TACHES D'UN JOUR
-// ===============================
+const isToday = (day) => day && localISO(day) === todayISO;
 
-const getTasksForDay = (day)=>{
+const isSelected = (day) =>
+    day && selectedDay.value && localISO(day) === localISO(selectedDay.value);
 
+const selectDay = (day) => {
+    if (!day) return;
+    selectedDay.value = isSelected(day) ? null : day;
+};
 
-    const date =
-        day.toISOString()
-        .split("T")[0];
+const selectedTasks = computed(() =>
+    selectedDay.value ? tasksByDay(selectedDay.value) : []
+);
 
+const selectedLabel = computed(() =>
+    selectedDay.value?.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+    })
+);
 
-    return tasks.value.filter(
-        task =>
-            task.date === date
+const previousMonth = () => {
+    currentDate.value = new Date(
+        currentDate.value.getFullYear(),
+        currentDate.value.getMonth() - 1,
+        1
     );
-
+    selectedDay.value = null;
 };
 
-
-
-// ===============================
-// NAVIGATION
-// ===============================
-
-const previousMonth = ()=>{
-
-    currentDate.value =
-        new Date(
-            currentDate.value.getFullYear(),
-            currentDate.value.getMonth()-1,
-            1
-        );
-
+const nextMonth = () => {
+    currentDate.value = new Date(
+        currentDate.value.getFullYear(),
+        currentDate.value.getMonth() + 1,
+        1
+    );
+    selectedDay.value = null;
 };
 
-
-const nextMonth = ()=>{
-
-    currentDate.value =
-        new Date(
-            currentDate.value.getFullYear(),
-            currentDate.value.getMonth()+1,
-            1
-        );
-
+const goToday = () => {
+    currentDate.value = new Date();
+    selectedDay.value = new Date();
 };
 
+const goTask = (id) => router.push(`/tasks/${id}`);
 
-
-// ===============================
-// COULEUR PRIORITE
-// ===============================
-
-const priorityClass = (priority)=>{
-
-
-    return {
-
-        low:"low",
-
-        medium:"medium",
-
-        high:"high",
-
-        urgent:"urgent"
-
-    }[priority] || "medium";
-
-
-};
-
-
-
-onMounted(()=>{
-
-    loadCalendar();
-
+const monthTaskCount = computed(() => {
+    const y = currentDate.value.getFullYear();
+    const m = currentDate.value.getMonth();
+    return tasks.value.filter((t) => {
+        const d = new Date(t.date + "T00:00:00");
+        return d.getFullYear() === y && d.getMonth() === m;
+    }).length;
 });
 
-
+onMounted(() => {
+    loadCalendar();
+    selectedDay.value = new Date();
+});
 </script>
 
-
 <template>
-
-
 <div class="calendar-page">
 
-
     <!-- HEADER -->
-
-    <div class="calendar-header">
-
+    <div class="calendar-header anim-fade-up">
 
         <div>
-
             <h1>
-                <CalendarDays :size="24" class="page-icon" /> Calendrier
+                <CalendarDays :size="26" class="page-icon" />
+                Calendrier
             </h1>
-
-
             <p>
-                Visualisez vos tâches et échéances.
+                {{ monthTaskCount }} échéance{{ monthTaskCount > 1 ? "s" : "" }}
+                ce mois-ci
             </p>
-
         </div>
-
 
 
         <div class="navigation">
 
-
-            <button
-                @click="previousMonth"
-            >
-                ◀
+            <button class="nav-btn" @click="previousMonth" aria-label="Mois précédent">
+                <ChevronLeft :size="18" />
             </button>
 
+            <h2>{{ monthName }}</h2>
 
-            <h2>
-                {{ monthName }}
-            </h2>
-
-
-            <button
-                @click="nextMonth"
-            >
-                ▶
+            <button class="nav-btn" @click="nextMonth" aria-label="Mois suivant">
+                <ChevronRight :size="18" />
             </button>
 
+            <button class="today-btn" @click="goToday">
+                Aujourd'hui
+            </button>
 
         </div>
 
-
     </div>
-
-
 
 
     <!-- LOADING -->
-
-
-    <div
-        v-if="loading"
-        class="loading"
-    >
-
-        Chargement du calendrier...
-
+    <div v-if="loading" class="loading">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
     </div>
 
 
+    <template v-else>
+
+        <!-- JOURS DE LA SEMAINE -->
+        <div class="weekdays">
+            <span v-for="w in WEEKDAYS" :key="w">{{ w }}</span>
+        </div>
 
 
-    <!-- CALENDRIER -->
-
-
-    <div
-        v-else
-        class="calendar-grid"
-    >
-
-
-        <div
-            v-for="day in days"
-            :key="day"
-            class="day-card"
-        >
-
-
-            <div class="day-number">
-
-                {{ day.getDate() }}
-
-            </div>
-
-
+        <!-- GRILLE -->
+        <div class="calendar-grid anim-fade-up">
 
             <div
-                class="events"
+                v-for="(day, i) in cells"
+                :key="i"
+                class="day-cell"
+                :class="{
+                    empty: !day,
+                    today: isToday(day),
+                    selected: isSelected(day),
+                    'has-tasks': day && tasksByDay(day).length,
+                }"
+                @click="selectDay(day)"
             >
+                <template v-if="day">
 
+                    <span class="day-number">{{ day.getDate() }}</span>
 
-                <div
+                    <div class="dots">
+                        <span
+                            v-for="t in tasksByDay(day).slice(0, 3)"
+                            :key="t.id"
+                            class="dot"
+                            :style="{
+                                background:
+                                    PRIORITY_COLORS[t.priority] ||
+                                    PRIORITY_COLORS.medium,
+                            }"
+                        />
+                        <span
+                            v-if="tasksByDay(day).length > 3"
+                            class="more"
+                        >+{{ tasksByDay(day).length - 3 }}</span>
+                    </div>
 
-                    v-for="task in getTasksForDay(day)"
-
-                    :key="task.id"
-
-                    class="event"
-
-                    :class="
-                        priorityClass(task.priority)
-                    "
-
-                >
-
-                    <strong>
-                        {{ task.title }}
-                    </strong>
-
-
-                    <small>
-
-                        {{ task.time || "Sans heure" }}
-
-                    </small>
-
-
-                    <small>
-
-                        <Folder :size="13" class="meta-icon" />
-                        {{ task.project || "Sans projet" }}
-
-                    </small>
-
-
-                </div>
-
-
+                </template>
             </div>
-
 
         </div>
 
 
-    </div>
+        <!-- TÂCHES DU JOUR SÉLECTIONNÉ -->
+        <section v-if="selectedDay" class="day-panel anim-fade-up">
 
+            <h3>{{ selectedLabel }}</h3>
+
+            <div v-if="!selectedTasks.length" class="empty-day">
+                Aucune échéance ce jour.
+            </div>
+
+            <div v-else class="day-tasks">
+
+                <button
+                    v-for="task in selectedTasks"
+                    :key="task.id"
+                    class="day-task"
+                    @click="goTask(task.id)"
+                >
+                    <span
+                        class="task-priority"
+                        :style="{
+                            background:
+                                PRIORITY_COLORS[task.priority] ||
+                                PRIORITY_COLORS.medium,
+                        }"
+                    />
+
+                    <span class="task-name">{{ task.title }}</span>
+
+                    <span class="task-meta">
+                        <Clock :size="12" />
+                        {{ task.time ? task.time.slice(0, 5) : "—" }}
+                    </span>
+
+                    <span v-if="task.project" class="task-meta">
+                        <Folder :size="12" />
+                        {{ task.project }}
+                    </span>
+
+                    <span v-if="task.assigned_to" class="task-meta">
+                        <User :size="12" />
+                        {{ task.assigned_to }}
+                    </span>
+
+                    <span class="status-chip" :class="task.status">
+                        {{ STATUS_LABELS[task.status] || task.status }}
+                    </span>
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </template>
 
 </div>
-
-
 </template>
 
 <style scoped>
-
-
-.calendar-page{
-
-    min-height:100vh;
-
-    padding:32px;
-
+.calendar-page {
+    min-height: 100vh;
+    padding: 32px;
     background: transparent;
-
-    color:white;
-
+    color: var(--text);
 }
 
+/* HEADER */
 
-/* ===============================
-   HEADER
-================================ */
-
-.calendar-header{
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    margin-bottom:30px;
-
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 26px;
 }
 
-
-.calendar-header h1{
-
-    font-size:32px;
-
-    font-weight:800;
-
-    margin:0;
-
+.calendar-header h1 {
+    font-family: var(--display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-h);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-
-.calendar-header p{
-
-    color:#94a3b8;
-
-    margin-top:8px;
-
+.page-icon {
+    color: var(--accent);
 }
 
-
-
-/* ===============================
-   NAVIGATION
-================================ */
-
-
-.navigation{
-
-    display:flex;
-
-    align-items:center;
-
-    gap:20px;
-
+.calendar-header p {
+    margin: 4px 0 0;
+    font-size: 13px;
 }
 
+/* NAVIGATION */
 
-.navigation h2{
-
-    text-transform:capitalize;
-
-    font-size:22px;
-
+.navigation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-
-.navigation button{
-
-    width:45px;
-
-    height:45px;
-
-    border:none;
-
-    border-radius:14px;
-
-    background:#2563eb;
-
-    color:white;
-
-    cursor:pointer;
-
-    font-size:18px;
-
-    transition:.25s;
-
+.navigation h2 {
+    font-family: var(--display);
+    text-transform: capitalize;
+    font-size: 19px;
+    color: var(--text-h);
+    margin: 0 8px;
+    min-width: 140px;
+    text-align: center;
 }
 
-
-.navigation button:hover{
-
-    transform:translateY(-3px);
-
-    background:#1d4ed8;
-
+.nav-btn {
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--border-strong);
+    border-radius: 11px;
+    background: var(--surface);
+    color: var(--text-h);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
 }
 
-
-
-/* ===============================
-   LOADING
-================================ */
-
-
-.loading{
-
-    height:400px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:18px;
-
-    color:#cbd5e1;
-
+.nav-btn:hover {
+    border-color: var(--accent-border);
+    color: var(--accent);
+    transform: translateY(-2px);
 }
 
-
-
-/* ===============================
-   CALENDRIER
-================================ */
-
-
-.calendar-grid{
-
-    display:grid;
-
-    grid-template-columns:
-    repeat(7,1fr);
-
-    gap:18px;
-
+.today-btn {
+    margin-left: 6px;
+    border: 1px solid var(--accent-border);
+    border-radius: 11px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-
-
-.day-card{
-
-    min-height:150px;
-
-    padding:16px;
-
-    border-radius:20px;
-
-    background:#1e293b;
-
-    border:1px solid #334155;
-
-    transition:.25s;
-
+.today-btn:hover {
+    background: var(--accent-strong);
+    color: white;
 }
 
+/* LOADING */
 
-.day-card:hover{
-
-    transform:translateY(-4px);
-
-    box-shadow:
-    0 15px 30px rgba(0,0,0,.35);
-
+.loading {
+    height: 300px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
+/* SEMAINE */
 
-
-.day-number{
-
-    width:35px;
-
-    height:35px;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    border-radius:50%;
-
-    background:#2563eb;
-
-    font-weight:700;
-
-    margin-bottom:15px;
-
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
 }
 
-
-
-/* ===============================
-   EVENTS
-================================ */
-
-
-.events{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:10px;
-
+.weekdays span {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text);
+    padding: 6px 0;
 }
 
+/* GRILLE */
 
-
-.event{
-
-    padding:12px;
-
-    border-radius:14px;
-
-    background:#0f172a;
-
-    border-left:4px solid;
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:5px;
-
-    cursor:pointer;
-
-    transition:.25s;
-
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
 }
 
-
-
-.event:hover{
-
-    transform:translateX(5px);
-
+.day-cell {
+    position: relative;
+    min-height: 88px;
+    padding: 10px;
+    border-radius: var(--radius-s);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s, background 0.2s;
 }
 
-
-
-.event strong{
-
-    font-size:14px;
-
+.day-cell.empty {
+    background: transparent;
+    border-color: transparent;
+    cursor: default;
+    min-height: 0;
 }
 
-
-
-.event small{
-
-    color:#cbd5e1;
-
-    font-size:12px;
-
+.day-cell:not(.empty):hover {
+    border-color: var(--accent-border);
+    transform: translateY(-2px);
 }
 
-
-
-/* ===============================
-   PRIORITES
-================================ */
-
-
-.event.low{
-
-    border-color:#22c55e;
-
+.day-cell.today {
+    border-color: var(--accent);
+    background: var(--accent-soft);
 }
 
-
-.event.medium{
-
-    border-color:#f59e0b;
-
+.day-cell.today .day-number {
+    color: var(--accent);
+    font-weight: 800;
 }
 
-
-.event.high{
-
-    border-color:#ef4444;
-
+.day-cell.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
-
-.event.urgent{
-
-    border-color:#dc2626;
-
-    background:#450a0a;
-
+.day-number {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-h);
 }
 
+.dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
 
+.dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
 
-/* ===============================
-   RESPONSIVE
-================================ */
+.more {
+    font-size: 10px;
+    color: var(--text);
+    font-weight: 700;
+}
 
+/* PANNEAU DU JOUR */
 
-@media(max-width:1100px){
+.day-panel {
+    margin-top: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    padding: 22px;
+}
 
+.day-panel h3 {
+    margin: 0 0 16px;
+    font-family: var(--display);
+    text-transform: capitalize;
+    color: var(--text-h);
+    font-size: 18px;
+}
 
-    .calendar-grid{
+.empty-day {
+    color: var(--text);
+    font-size: 14px;
+    padding: 10px 0;
+}
 
-        grid-template-columns:
-        repeat(4,1fr);
+.day-tasks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
 
+.day-task {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    color: var(--text-h);
+    text-align: left;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.day-task:hover {
+    border-color: var(--accent-border);
+    transform: translateX(4px);
+}
+
+.task-priority {
+    width: 4px;
+    height: 28px;
+    border-radius: 4px;
+    flex-shrink: 0;
+}
+
+.task-name {
+    font-size: 14px;
+    font-weight: 600;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.task-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+.status-chip {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    white-space: nowrap;
+}
+
+.status-chip.todo { color: #60a5fa; }
+.status-chip.in_progress { color: #fbbf24; }
+.status-chip.review { color: #a78bfa; }
+.status-chip.done { color: #4ade80; }
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+    .calendar-page {
+        padding: 16px;
     }
 
+    .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .navigation {
+        justify-content: space-between;
+    }
+
+    .navigation h2 {
+        min-width: 0;
+        font-size: 17px;
+    }
+
+    .day-cell {
+        min-height: 52px;
+        padding: 6px;
+        border-radius: 8px;
+    }
+
+    .day-number {
+        font-size: 12px;
+    }
+
+    .dots {
+        margin-top: 5px;
+        gap: 4px;
+    }
+
+    .day-task {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .status-chip {
+        margin-left: 0;
+    }
 }
-
-
-
-@media(max-width:750px){
-
-
-    .calendar-page{
-
-        padding:18px;
-
-    }
-
-
-    .calendar-header{
-
-        flex-direction:column;
-
-        align-items:flex-start;
-
-        gap:20px;
-
-    }
-
-
-    .calendar-grid{
-
-        grid-template-columns:
-        repeat(2,1fr);
-
-    }
-
-}
-
-
-
-@media(max-width:450px){
-
-
-    .calendar-grid{
-
-        grid-template-columns:1fr;
-
-    }
-
-
-}
-
-
-
 </style>

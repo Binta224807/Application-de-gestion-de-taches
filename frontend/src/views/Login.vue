@@ -150,7 +150,7 @@ const login = async () => {
 .glow-a {
   top: -140px;
   left: -120px;
-  background: #2563eb;
+  background: var(--accent-strong);
 }
 
 .glow-b {
@@ -192,7 +192,7 @@ const login = async () => {
   width: 100%;
   padding: 12px;
   border-radius: 12px;
-  background: #1e293b;
+  background: var(--surface-2);
   border: 1px solid #334155;
   color: white;
   outline: none;
@@ -207,6 +207,6 @@ const login = async () => {
 }
 
 .input::placeholder {
-  color: #94a3b8;
+  color: var(--text);
 }
 </style>

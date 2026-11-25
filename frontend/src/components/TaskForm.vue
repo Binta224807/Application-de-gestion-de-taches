@@ -1309,7 +1309,7 @@ onMounted(async()=>{
 
     overflow-y: auto;
 
-    background: #0f172a;
+    background: var(--surface);
 
     padding: 32px;
 
@@ -1353,7 +1353,7 @@ onMounted(async()=>{
 
 .modal-header p {
 
-    color: #94a3b8;
+    color: var(--text);
 
     margin-top: 6px;
 
@@ -1364,7 +1364,7 @@ onMounted(async()=>{
 
     flex-shrink: 0;
 
-    background: #1e293b;
+    background: var(--surface-2);
 
     color: white;
 
@@ -1388,7 +1388,7 @@ onMounted(async()=>{
 
 .section {
 
-    background: #1e293b;
+    background: var(--surface-2);
 
     padding: 22px;
 
@@ -1590,7 +1590,7 @@ select:focus {
 
     outline: none;
 
-    border-color: #2563eb;
+    border-color: var(--accent-strong);
 }
 
 
@@ -1636,7 +1636,7 @@ textarea {
 
 .create-btn {
 
-    background: #2563eb;
+    background: var(--accent-strong);
 
     color: white;
 
@@ -1684,7 +1684,7 @@ textarea {
 
     border-radius: 10px;
 
-    background: #2563eb;
+    background: var(--accent-strong);
 
     color: white;
 
@@ -1759,7 +1759,7 @@ textarea {
 
 .save {
 
-    background: #2563eb;
+    background: var(--accent-strong);
 
     color: white;
 }
@@ -1844,7 +1844,7 @@ textarea {
 
         z-index: 2;
 
-        background: #0f172a;
+        background: var(--surface);
 
         padding-bottom: 15px;
 
@@ -1907,7 +1907,7 @@ textarea {
 
         bottom: 0;
 
-        background: #0f172a;
+        background: var(--surface);
 
         padding: 15px 0 5px;
 

@@ -276,7 +276,7 @@ onMounted(() => {
 
 .notifications-header p {
 
-    color: #94a3b8;
+    color: var(--text);
     margin: 0;
 
 }
@@ -284,7 +284,7 @@ onMounted(() => {
 
 .mark-all-btn {
 
-    background: #2563eb;
+    background: var(--accent-strong);
     color: white;
     border: none;
     padding: 12px 20px;
@@ -298,14 +298,14 @@ onMounted(() => {
 
 .mark-all-btn:hover {
 
-    background: #1d4ed8;
+    background: var(--accent-strong);
 
 }
 
 
 .loading {
 
-    color: #94a3b8;
+    color: var(--text);
     text-align: center;
     padding: 60px;
 
@@ -319,10 +319,10 @@ onMounted(() => {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: #111827;
+    background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 24px;
-    color: #94a3b8;
+    color: var(--text);
     text-align: center;
 
 }
@@ -359,7 +359,7 @@ onMounted(() => {
     gap: 16px;
     padding: 20px;
     border-radius: 16px;
-    background: #111827;
+    background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.08);
     cursor: pointer;
     transition: .2s;
@@ -369,14 +369,14 @@ onMounted(() => {
 
 .notification-card:hover {
 
-    border-color: #2563eb;
+    border-color: var(--accent-strong);
 
 }
 
 
 .notification-card.unread {
 
-    background: #1e293b;
+    background: var(--surface-2);
     border-color: rgba(37, 99, 235, 0.3);
 
 }
@@ -387,7 +387,7 @@ onMounted(() => {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: #2563eb;
+    background: var(--accent-strong);
     margin-top: 6px;
     flex-shrink: 0;
 
@@ -426,7 +426,7 @@ onMounted(() => {
     gap: 16px;
     flex-wrap: wrap;
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text);
 
 }
 
@@ -449,9 +449,9 @@ onMounted(() => {
 
 .mark-read-btn:hover {
 
-    background: #2563eb;
+    background: var(--accent-strong);
     color: white;
-    border-color: #2563eb;
+    border-color: var(--accent-strong);
 
 }
 

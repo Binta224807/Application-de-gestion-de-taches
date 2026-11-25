@@ -135,7 +135,7 @@ const handleSearch = (value) => {
 
   left: 22%;
 
-  background: #2563eb;
+  background: var(--accent-strong);
 
 }
 

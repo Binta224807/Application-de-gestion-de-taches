@@ -276,7 +276,7 @@ const deleteTask = () => {
 
 
 .status-badge.todo {
-  background: #3b82f6;
+  background: var(--accent);
 }
 
 .status-badge.in_progress {
@@ -396,7 +396,7 @@ const deleteTask = () => {
     bottom: 8px;
     width: 3px;
     border-radius: 3px;
-    background: #3b82f6;
+    background: var(--accent);
 
   }
 

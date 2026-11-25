@@ -8,12 +8,20 @@
 
         <div>
             <h1 class="dashboard-title">
-                Tableau de bord
+                {{ greeting }}
             </h1>
             <p class="dashboard-subtitle">
-                {{ isPersonal ? "Espace personnel" : (isCEO ? "Pilotage de " + companyName : "Vos tâches") }}
+                {{ subtitle }}
             </p>
         </div>
+
+        <button
+            class="new-task-btn"
+            @click="router.push('/tasks')"
+        >
+            <Plus :size="17" />
+            Nouvelle tâche
+        </button>
 
     </div>
 
@@ -76,14 +84,14 @@
         </div>
 
 
-        <!-- TABLE PAR EMPLOYÉ (PDG) -->
+        <!-- TABLE PAR MEMBRE (ADMIN D'ORGANISATION) -->
 
         <section
-            v-if="isCEO"
+            v-if="showMembers"
             class="dashboard-section anim-fade-up"
         >
 
-            <h2><Users :size="19" class="section-icon" /> Vue par employé</h2>
+            <h2><Users :size="19" class="section-icon" /> Vue par membre</h2>
 
             <div class="employees-table-wrapper">
 
@@ -92,7 +100,7 @@
                     <thead>
 
                         <tr>
-                            <th>Employé</th>
+                            <th>Membre</th>
                             <th>À faire</th>
                             <th>En cours</th>
                             <th>Terminées</th>
@@ -199,6 +207,7 @@ import {
     Users,
     Flame,
     CalendarClock,
+    Plus,
 } from "lucide-vue-next";
 
 const router = useRouter();
@@ -221,9 +230,47 @@ const urgentTasks = ref([]);
 const overdueTasks = ref([]);
 const upcomingTasks = ref([]);
 
-import { isAdmin, spaceName, isPersonal } from "../services/space";
+import {
+    isAdmin,
+    spaceName,
+    isPersonal,
+    spaceState,
+} from "../services/space";
+
 const isCEO = isAdmin;
 const companyName = spaceName;
+
+// Adaptation au type d'utilisateur connecté
+const displayName = computed(
+    () =>
+        spaceState.user?.first_name ||
+        spaceState.user?.username ||
+        ""
+);
+
+const greeting = computed(() =>
+    displayName.value
+        ? `Bonjour, ${displayName.value}`
+        : "Tableau de bord"
+);
+
+const subtitle = computed(() => {
+    if (isPersonal.value) {
+        return "Espace personnel";
+    }
+    if (isAdmin.value) {
+        return `Pilotage de ${companyName.value}`;
+    }
+    const title = spaceState.user?.title;
+    return title
+        ? `${title} — ${companyName.value}`
+        : `Vos tâches — ${companyName.value}`;
+});
+
+// Table des membres : seulement pour un admin DANS une organisation
+const showMembers = computed(
+    () => isAdmin.value && !isPersonal.value
+);
 
 
 const loadDashboard = async () => {
@@ -343,6 +390,8 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
 
 }
 
@@ -352,6 +401,7 @@ onMounted(() => {
     color: var(--text-h);
     font-size: 32px;
     font-weight: 800;
+    font-family: var(--display);
 
 }
 
@@ -360,6 +410,35 @@ onMounted(() => {
 
     color: var(--text);
     margin-top: 8px;
+
+}
+
+
+.new-task-btn {
+
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 13px;
+    padding: 13px 22px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    background: var(--accent);
+    cursor: pointer;
+    transition: transform .2s, box-shadow .2s, background .2s;
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.28);
+
+}
+
+
+.new-task-btn:hover {
+
+    background: var(--accent-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 28px rgba(59, 130, 246, 0.4);
 
 }
 

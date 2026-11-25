@@ -11,7 +11,7 @@
 
       <h1>NOVA TASKS</h1>
 
-      <p>Pilotage d'entreprise</p>
+      <p>Organisez votre travail</p>
 
       <span class="brand-signature">by Clever</span>
 

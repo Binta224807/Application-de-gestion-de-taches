@@ -289,7 +289,7 @@ onMounted(() => {
 .trash-header p {
 
     margin-top: 8px;
-    color: #94a3b8;
+    color: var(--text);
 
 }
 
@@ -298,7 +298,7 @@ onMounted(() => {
 
     padding: 12px 20px;
     border-radius: 999px;
-    background: #1e293b;
+    background: var(--surface-2);
     border: 1px solid #334155;
     color: #cbd5e1;
     font-weight: 600;
@@ -325,7 +325,7 @@ onMounted(() => {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: #1e293b;
+    background: var(--surface-2);
     border-radius: 25px;
     border: 1px solid #334155;
     text-align: center;
@@ -347,7 +347,7 @@ onMounted(() => {
 
 .empty p {
 
-    color: #94a3b8;
+    color: var(--text);
 
 }
 
@@ -363,7 +363,7 @@ onMounted(() => {
 
 .trash-card {
 
-    background: #1e293b;
+    background: var(--surface-2);
     border: 1px solid #334155;
     border-radius: 24px;
     padding: 24px;
@@ -416,7 +416,7 @@ onMounted(() => {
 
 .description {
 
-    color: #94a3b8;
+    color: var(--text);
     line-height: 1.6;
     font-size: 14px;
 
@@ -436,7 +436,7 @@ onMounted(() => {
 
 .infos span {
 
-    background: #0f172a;
+    background: var(--surface);
     padding: 10px 14px;
     border-radius: 12px;
 

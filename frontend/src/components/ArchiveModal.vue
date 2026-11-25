@@ -154,7 +154,7 @@ const confirmArchive = () => {
 
     width:420px;
 
-    background:#0f172a;
+    background:var(--surface);
 
     border-radius:24px;
 
@@ -195,7 +195,7 @@ const confirmArchive = () => {
 
 .header p{
 
-    color:#94a3b8;
+    color:var(--text);
 
     margin-top:8px;
 
@@ -205,7 +205,7 @@ const confirmArchive = () => {
 
 .close{
 
-    background:#1e293b;
+    background:var(--surface-2);
 
     border:none;
 
@@ -249,7 +249,7 @@ const confirmArchive = () => {
 
 .task-preview p{
 
-    color:#94a3b8;
+    color:var(--text);
 
 }
 
@@ -275,7 +275,7 @@ const confirmArchive = () => {
 
     border-radius:14px;
 
-    background:#1e293b;
+    background:var(--surface-2);
 
     color:white;
 
@@ -291,7 +291,7 @@ const confirmArchive = () => {
 
 .options button:hover{
 
-    background:#2563eb;
+    background:var(--accent-strong);
 
     transform:translateY(-2px);
 

@@ -445,7 +445,7 @@ onMounted(() => {
 .loading,
 .error-state {
 
-    color: #94a3b8;
+    color: var(--text);
     text-align: center;
     padding: 60px;
 
@@ -474,7 +474,7 @@ onMounted(() => {
 .back-btn {
 
     background: transparent;
-    color: #94a3b8;
+    color: var(--text);
     border: none;
     padding: 0;
     margin-bottom: 12px;
@@ -541,7 +541,7 @@ onMounted(() => {
 
 
 .status.todo {
-    background: #3b82f6;
+    background: var(--accent);
 }
 
 .status.in_progress {
@@ -582,7 +582,7 @@ onMounted(() => {
 
 .btn-edit {
 
-    background: #2563eb;
+    background: var(--accent-strong);
     color: white;
 
 }
@@ -590,7 +590,7 @@ onMounted(() => {
 
 .btn-edit:hover {
 
-    background: #1d4ed8;
+    background: var(--accent-strong);
 
 }
 
@@ -621,7 +621,7 @@ onMounted(() => {
 
 .detail-card {
 
-    background: #111827;
+    background: var(--surface);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
     padding: 24px;
@@ -679,7 +679,7 @@ onMounted(() => {
 
 .meta-label {
 
-    color: #94a3b8;
+    color: var(--text);
     font-size: 14px;
 
 }
@@ -734,7 +734,7 @@ onMounted(() => {
 
 
 .btn-status.todo {
-    background: #3b82f6;
+    background: var(--accent);
 }
 
 .btn-status.in_progress {

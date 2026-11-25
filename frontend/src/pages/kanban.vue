@@ -52,22 +52,6 @@
             <option value="done">Terminées</option>
         </select>
 
-        <select
-            v-if="projects.length"
-            v-model="projectFilter"
-            class="filter-select"
-        >
-            <option value="">Tous les projets</option>
-            <option value="none">Sans projet</option>
-            <option
-                v-for="p in projects"
-                :key="p.id"
-                :value="String(p.id)"
-            >
-                {{ p.icon }} {{ p.name }} — {{ p.progress }}%
-            </option>
-        </select>
-
     </div>
 
 
@@ -161,8 +145,6 @@ const showTaskForm = ref(false);
 
 const searchQuery = ref("");
 const statusFilter = ref("");
-const projectFilter = ref("");
-const projects = ref([]);
 
 import { isAdmin, spaceName } from "../services/space";
 const isCEO = isAdmin;
@@ -184,12 +166,7 @@ const filteredTasks = computed(() => {
         const matchesStatus = statusFilter.value === ""
             || task.status === statusFilter.value;
 
-        const matchesProject = projectFilter.value === ""
-            || (projectFilter.value === "none"
-                ? !task.project
-                : String(task.project?.id) === projectFilter.value);
-
-        return matchesSearch && matchesStatus && matchesProject;
+        return matchesSearch && matchesStatus;
 
     });
 
@@ -232,25 +209,6 @@ const loadTasks = async () => {
 const reloadTasks = async () => {
 
     await loadTasks();
-
-};
-
-
-const loadProjects = async () => {
-
-    try {
-
-        const response = await api.get("projects/");
-
-        projects.value = response.data;
-
-    }
-
-    catch (error) {
-
-        console.error(error);
-
-    }
 
 };
 
@@ -320,7 +278,6 @@ const deleteTask = async (task) => {
 onMounted(() => {
 
     loadTasks();
-    loadProjects();
 
 });
 

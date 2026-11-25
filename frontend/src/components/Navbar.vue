@@ -301,8 +301,10 @@ const logout = () => {
 
     localStorage.removeItem("username");
     localStorage.removeItem("is_ceo");
+    localStorage.removeItem("is_admin");
     localStorage.removeItem("company_id");
     localStorage.removeItem("company_name");
+    localStorage.removeItem("active_space");
 
     isAuthenticated.value = false;
 

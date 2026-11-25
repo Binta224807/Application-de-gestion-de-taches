@@ -230,7 +230,8 @@ const loading = ref(true);
 const error = ref("");
 const showTaskForm = ref(false);
 
-const isCEO = ref(localStorage.getItem("is_ceo") === "1");
+import { isAdmin } from "../services/space";
+const isCEO = isAdmin;
 const currentUser = ref(localStorage.getItem("username"));
 
 

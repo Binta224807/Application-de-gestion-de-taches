@@ -71,6 +71,7 @@ import Starfield from "../components/Starfield.vue";
 import { reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import api from "../services/api";
+import { loadSpaces } from "../services/space";
 
 const router = useRouter();
 
@@ -109,16 +110,8 @@ const login = async () => {
     localStorage.setItem("refresh", refreshToken);
     localStorage.setItem("username", form.username);
 
-    // Récupérer les informations de l'utilisateur via le dashboard
-    const dashboardResponse = await api.get("dashboard/");
-    const dashboardData = dashboardResponse.data;
-
-    localStorage.setItem("is_ceo", dashboardData.is_ceo ? "1" : "0");
-
-    if (dashboardData.company) {
-      localStorage.setItem("company_id", String(dashboardData.company.id));
-      localStorage.setItem("company_name", dashboardData.company.name);
-    }
+    // Charge les espaces de l'utilisateur (personnel + organisations)
+    await loadSpaces();
 
     router.push("/dashboard");
 

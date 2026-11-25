@@ -8,6 +8,7 @@ from rest_framework_simplejwt.views import (
 
 from .views import (
     RegisterView,
+    MeAPIView,
 
     ProjectViewSet,
     CategoryViewSet,
@@ -120,6 +121,12 @@ urlpatterns = [
     # ==========================
     # Dashboard
     # ==========================
+
+    path(
+        "me/",
+        MeAPIView.as_view(),
+        name="me",
+    ),
 
     path(
         "dashboard/",

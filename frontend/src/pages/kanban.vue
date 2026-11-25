@@ -146,8 +146,9 @@ const showTaskForm = ref(false);
 const searchQuery = ref("");
 const statusFilter = ref("");
 
-const isCEO = ref(localStorage.getItem("is_ceo") === "1");
-const companyName = ref(localStorage.getItem("company_name") || "votre entreprise");
+import { isAdmin, spaceName } from "../services/space";
+const isCEO = isAdmin;
+const companyName = spaceName;
 
 
 // =======================================================

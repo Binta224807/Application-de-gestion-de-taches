@@ -1,6 +1,6 @@
 from rest_framework import permissions
 
-from .models import UserRole
+from .models import UserRole, Company
 
 
 # ============================================================
@@ -30,11 +30,126 @@ def get_user_company(user):
     return None
 
 
-def is_ceo(user):
+def is_company_member(user, company):
+
+    if not company:
+
+        return False
 
     profile = get_user_profile(user)
 
-    return profile and profile.is_ceo
+    return (
+        company.owner_id == user.id
+        or (
+            profile
+            and profile.company_id == company.id
+        )
+    )
+
+
+def is_org_admin(user, company):
+
+    """
+    Administrateur d'une organisation : propriétaire,
+    membre marqué admin, ou rôle hérité 'ceo'.
+    """
+
+    if not is_company_member(user, company):
+
+        return False
+
+    profile = get_user_profile(user)
+
+    return (
+        company.owner_id == user.id
+        or (
+            profile
+            and (
+                profile.is_admin
+                or profile.role == UserRole.CEO
+            )
+        )
+    )
+
+
+def is_ceo(user):
+
+    """
+    Compatibilité : admin de l'entreprise rattachée au profil.
+    """
+
+    company = get_user_company(user)
+
+    return company and is_org_admin(user, company)
+
+
+PERSONAL = "personal"
+FORBIDDEN = "forbidden"
+
+
+def resolve_space(request):
+
+    """
+    Détermine l'espace actif de la requête.
+
+    Retourne (company, ok) :
+      - ("personal")  -> (None, True)   espace personnel
+      - id entreprise -> (Company, True) si membre
+      - sinon         -> (None, False)  accès refusé
+      - absent        -> legacy : entreprise du profil,
+                         ou personnel si aucune
+    """
+
+    space = request.query_params.get("space")
+
+    if space == PERSONAL:
+
+        return None, True
+
+    if space:
+
+        try:
+
+            company = Company.objects.get(pk=int(space))
+
+        except (ValueError, Company.DoesNotExist):
+
+            return None, False
+
+        if is_company_member(request.user, company):
+
+            return company, True
+
+        return None, False
+
+    company = get_user_company(request.user)
+
+    return company, True
+
+
+def task_is_accessible(task, user):
+
+    """
+    Tâche personnelle : propriétaire ou assigné.
+    Tâche d'organisation : membre, admin ou assigné.
+    """
+
+    if task.company_id is None:
+
+        return (
+            task.user_id == user.id
+            or task.assigned_to.filter(
+                pk=user.pk
+            ).exists()
+        )
+
+    if is_org_admin(user, task.company):
+
+        return True
+
+    return task.assigned_to.filter(
+        pk=user.pk
+    ).exists()
 
 
 # ============================================================
@@ -45,115 +160,133 @@ def is_ceo(user):
 class IsCEOOrAdmin(permissions.BasePermission):
 
     """
-    Autorise uniquement les PDG/administrateurs d'entreprise.
+    Admin de l'organisation active (espace demandé ou profil).
+    Conservé pour compatibilité.
     """
 
     def has_permission(self, request, view):
 
-        return (
+        if not (
             request.user
             and request.user.is_authenticated
-            and is_ceo(request.user)
-        )
+        ):
+
+            return False
+
+        company, ok = resolve_space(request)
+
+        if not ok:
+
+            return False
+
+        if company is None:
+
+            return True
+
+        return is_org_admin(request.user, company)
 
 
 class HasCompanyAccess(permissions.BasePermission):
 
     """
-    Autorise uniquement les utilisateurs rattachés à une entreprise.
+    Vérifie que l'espace demandé est accessible
+    (personnel ou organisation dont on est membre).
     """
 
     def has_permission(self, request, view):
 
-        return (
+        if not (
             request.user
             and request.user.is_authenticated
-            and get_user_company(request.user) is not None
-        )
+        ):
+
+            return False
+
+        _, ok = resolve_space(request)
+
+        return ok
 
 
 class IsCompanyMember(permissions.BasePermission):
 
     """
-    Vérifie que l'objet appartient à la même entreprise que l'utilisateur.
+    L'objet appartient à l'espace actif de l'utilisateur
+    (personnel : user == request.user, organisation : membre).
     """
 
     def has_object_permission(self, request, view, obj):
 
-        user_company = get_user_company(request.user)
+        company, ok = resolve_space(request)
 
-        if not user_company:
+        if not ok:
 
             return False
 
-        return getattr(obj, "company", None) == user_company
+        obj_company = getattr(obj, "company", None)
+
+        if obj_company is None:
+
+            return getattr(obj, "user", None) == request.user
+
+        return obj_company == company
 
 
 class IsTaskAccessible(permissions.BasePermission):
 
     """
-    PDG : accès à toutes les tâches de son entreprise.
-    Employé : accès uniquement aux tâches qui lui sont assignées.
+    Admin : toutes les tâches de l'organisation.
+    Membre : tâches assignées.
+    Personnel : ses propres tâches.
     """
 
     def has_object_permission(self, request, view, obj):
 
-        if not request.user or not request.user.is_authenticated:
+        if not (
+            request.user
+            and request.user.is_authenticated
+        ):
 
             return False
 
-        user_company = get_user_company(request.user)
-
-        if not user_company or obj.company != user_company:
-
-            return False
-
-        if is_ceo(request.user):
-
-            return True
-
-        return obj.assigned_to.filter(
-            pk=request.user.pk
-        ).exists()
+        return task_is_accessible(obj, request.user)
 
 
 class IsCEOOrTaskAssignee(permissions.BasePermission):
 
     """
-    Autorise le PDG ou l'employé assigné à modifier une tâche.
+    Admin de l'organisation ou assigné à la tâche.
+    Personnel : propriétaire de la tâche.
     """
 
     def has_object_permission(self, request, view, obj):
 
-        if not request.user or not request.user.is_authenticated:
+        if not (
+            request.user
+            and request.user.is_authenticated
+        ):
 
             return False
 
-        user_company = get_user_company(request.user)
-
-        if not user_company or obj.company != user_company:
-
-            return False
-
-        if is_ceo(request.user):
-
-            return True
-
-        return obj.assigned_to.filter(
-            pk=request.user.pk
-        ).exists()
+        return task_is_accessible(obj, request.user)
 
 
 class IsCompanyOwner(permissions.BasePermission):
 
     """
-    Vérifie que l'utilisateur est le propriétaire (PDG) de l'entreprise.
+    Propriétaire ou admin de l'entreprise.
     """
 
     def has_object_permission(self, request, view, obj):
 
-        return (
+        if not (
             request.user
             and request.user.is_authenticated
-            and getattr(obj, "owner", None) == request.user
-        )
+        ):
+
+            return False
+
+        if getattr(obj, "owner", None) == request.user:
+
+            return True
+
+        return is_org_admin(request.user, obj)

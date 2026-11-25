@@ -18,6 +18,65 @@
     </div>
 
 
+    <!-- SÉLECTEUR D'ESPACE -->
+
+    <div
+      v-if="spaceState.spaces.length > 0"
+      class="space-switcher"
+    >
+
+      <button
+        class="space-current"
+        @click.stop="spaceMenu = !spaceMenu"
+      >
+
+        <component
+          :is="isPersonal ? User : Building2"
+          :size="15"
+        />
+
+        <span class="space-name">
+          {{ isPersonal ? "Personnel" : activeSpace?.name }}
+        </span>
+
+        <ChevronDown
+          :size="14"
+          class="chevron"
+          :class="{ flipped: spaceMenu }"
+        />
+
+      </button>
+
+
+      <div
+        v-if="spaceMenu"
+        class="space-menu"
+      >
+
+        <button
+          v-for="sp in spaceState.spaces"
+          :key="sp.id"
+          class="space-option"
+          :class="{ active: String(sp.id) === spaceState.current }"
+          @click.stop="switchSpace(sp.id)"
+        >
+
+          <component
+            :is="sp.type === 'personal' ? User : Building2"
+            :size="14"
+          />
+
+          <span>{{ sp.type === "personal" ? "Personnel" : sp.name }}</span>
+
+          <small v-if="sp.title">{{ sp.title }}</small>
+
+        </button>
+
+      </div>
+
+    </div>
+
+
 
     <!-- NAVIGATION -->
 
@@ -90,6 +149,8 @@ import {
   Trash2,
   Building2,
   Bell,
+  User,
+  ChevronDown,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -105,11 +166,29 @@ const username =
   localStorage.getItem("username")
   || "Utilisateur";
 
-const isCEO = localStorage.getItem("is_ceo") === "1";
+import { ref } from "vue";
+import { spaceState, isPersonal, activeSpace, isAdmin, setSpace } from "../services/space";
+
+const spaceMenu = ref(false);
+
+const switchSpace = (id) => {
+
+  spaceMenu.value = false;
+
+  if (String(id) !== spaceState.current) {
+
+    setSpace(id);
+
+  }
+
+};
 
 const roleLabel = computed(() => {
 
-  return isCEO ? "PDG" : "Employé";
+  if (isPersonal.value) return "Personnel";
+
+  return spaceState.user?.title
+    || (isAdmin.value ? "Administrateur" : "Membre");
 
 });
 
@@ -133,11 +212,11 @@ const menuItems = computed(() => {
 
   const items = [...baseItems];
 
-  if (isCEO) {
+  if (!isPersonal.value) {
 
     items.push({
       to: "/company",
-      label: "Mon entreprise",
+      label: "Mon organisation",
       icon: Building2,
     });
 
@@ -515,6 +594,192 @@ const emit = defineEmits([
 
   }
 
+
+}
+
+
+
+
+/* --- Sélecteur d'espace --- */
+
+.space-switcher {
+
+  position: relative;
+
+  padding: 0 18px;
+
+  margin-bottom: 10px;
+
+}
+
+
+.space-current {
+
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 9px 12px;
+
+  background: var(--surface-2);
+
+  border: 1px solid var(--border);
+
+  border-radius: 10px;
+
+  color: var(--text-h);
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: border-color .2s;
+
+}
+
+
+.space-current:hover {
+
+  border-color: var(--accent-border);
+
+}
+
+
+.space-name {
+
+  flex: 1;
+
+  text-align: left;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+.chevron {
+
+  transition: transform .25s;
+
+  color: var(--text);
+
+}
+
+
+.chevron.flipped {
+
+  transform: rotate(180deg);
+
+}
+
+
+.space-menu {
+
+  position: absolute;
+
+  left: 18px;
+
+  right: 18px;
+
+  top: calc(100% + 6px);
+
+  z-index: 50;
+
+  background: var(--surface-2);
+
+  border: 1px solid var(--border-strong);
+
+  border-radius: 12px;
+
+  padding: 6px;
+
+  box-shadow: 0 16px 40px rgba(0,0,0,.45);
+
+  animation: scale-in .25s cubic-bezier(.34,1.4,.64,1) both;
+
+}
+
+
+.space-option {
+
+  width: 100%;
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 8px;
+
+  padding: 9px 10px;
+
+  border: none;
+
+  border-radius: 8px;
+
+  background: transparent;
+
+  color: var(--text);
+
+  font-family: inherit;
+
+  font-size: 13px;
+
+  cursor: pointer;
+
+  transition: background .15s, color .15s;
+
+}
+
+
+.space-option span {
+
+  flex: 1;
+
+  text-align: left;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+
+}
+
+
+.space-option small {
+
+  color: var(--text);
+
+  opacity: .7;
+
+  font-size: 10px;
+
+}
+
+
+.space-option:hover {
+
+  background: var(--accent-soft);
+
+  color: var(--text-h);
+
+}
+
+
+.space-option.active {
+
+  color: var(--accent);
 
 }
 

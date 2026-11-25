@@ -20,6 +20,15 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    const space = localStorage.getItem("active_space");
+
+    if (space) {
+      config.params = {
+        ...(config.params || {}),
+        space,
+      };
+    }
+
     return config;
   },
   (error) => {

@@ -11,7 +11,7 @@
                 Tableau de bord
             </h1>
             <p class="dashboard-subtitle">
-                {{ isCEO ? "Pilotage de " + companyName : "Vos tâches" }}
+                {{ isPersonal ? "Espace personnel" : (isCEO ? "Pilotage de " + companyName : "Vos tâches") }}
             </p>
         </div>
 
@@ -221,8 +221,9 @@ const urgentTasks = ref([]);
 const overdueTasks = ref([]);
 const upcomingTasks = ref([]);
 
-const isCEO = ref(localStorage.getItem("is_ceo") === "1");
-const companyName = ref(localStorage.getItem("company_name") || "votre entreprise");
+import { isAdmin, spaceName, isPersonal } from "../services/space";
+const isCEO = isAdmin;
+const companyName = spaceName;
 
 
 const loadDashboard = async () => {

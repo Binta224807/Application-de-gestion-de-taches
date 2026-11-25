@@ -36,6 +36,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
             "company",
             "company_name",
             "role",
+            "title",
+            "is_admin",
             "phone",
             "created_at",
             "updated_at",
@@ -89,6 +91,8 @@ class CompanySerializer(serializers.ModelSerializer):
             "id",
             "name",
             "description",
+            "kind",
+            "invite_code",
             "owner",
             "owner_name",
             "employee_count",
@@ -98,6 +102,7 @@ class CompanySerializer(serializers.ModelSerializer):
 
         read_only_fields = [
             "owner",
+            "invite_code",
             "created_at",
             "updated_at",
         ]
@@ -284,50 +289,89 @@ class TaskSerializer(serializers.ModelSerializer):
 
         request = self.context.get("request")
 
-        if request and request.user:
+        if not (request and request.user):
 
-            profile = getattr(request.user, "profile", None)
+            return data
 
-            if profile and profile.company:
+        company = (
+            self.instance.company
+            if self.instance is not None
+            else None
+        )
 
-                company = profile.company
+        if company is None:
 
-                assigned_to = data.get("assigned_to")
+            from .permissions import resolve_space
 
-                if assigned_to:
+            company, _ = resolve_space(request)
 
-                    for assignee in assigned_to:
+        assigned_to = data.get("assigned_to")
 
-                        assigned_profile = getattr(
-                            assignee,
-                            "profile",
-                            None
+        if company is None:
+
+            if assigned_to:
+
+                for assignee in assigned_to:
+
+                    if assignee != request.user:
+
+                        raise serializers.ValidationError(
+                            "Une tâche personnelle ne peut être assignée qu'à vous-même."
                         )
 
-                        if (
-                            not assigned_profile
-                            or assigned_profile.company != company
-                        ):
+            project = data.get("project")
 
-                            raise serializers.ValidationError(
-                                "Les employés assignés doivent appartenir à la même entreprise."
-                            )
+            if project and (
+                project.company is not None
+                or project.user != request.user
+            ):
 
-                project = data.get("project")
+                raise serializers.ValidationError(
+                    "Le projet doit appartenir à votre espace personnel."
+                )
 
-                if project and project.company != company:
+            category = data.get("category")
+
+            if category and (
+                category.company is not None
+                or category.user != request.user
+            ):
+
+                raise serializers.ValidationError(
+                    "La catégorie doit appartenir à votre espace personnel."
+                )
+
+            return data
+
+        if assigned_to:
+
+            for assignee in assigned_to:
+
+                from .permissions import is_company_member
+
+                if not is_company_member(
+                    assignee, company
+                ):
 
                     raise serializers.ValidationError(
-                        "Le projet doit appartenir à la même entreprise."
+                        "Les membres assignés doivent appartenir à la même organisation."
                     )
 
-                category = data.get("category")
+        project = data.get("project")
 
-                if category and category.company != company:
+        if project and project.company != company:
 
-                    raise serializers.ValidationError(
-                        "La catégorie doit appartenir à la même entreprise."
-                    )
+            raise serializers.ValidationError(
+                "Le projet doit appartenir à la même organisation."
+            )
+
+        category = data.get("category")
+
+        if category and category.company != company:
+
+            raise serializers.ValidationError(
+                "La catégorie doit appartenir à la même organisation."
+            )
 
         return data
 

@@ -44,54 +44,17 @@
           class="input"
         />
 
-        <select
-          v-model="form.role"
+        <input
+          v-model="form.invite_code"
+          type="text"
+          placeholder="Code d'invitation (optionnel)"
           class="input"
-        >
-          <option value="ceo">
-            PDG / Administrateur
-          </option>
+        />
 
-          <option value="employee">
-            Employé
-          </option>
-        </select>
-
-        <div
-          v-if="form.role === 'ceo'"
-          class="space-y-4"
-        >
-          <input
-            v-model="form.company_name"
-            type="text"
-            placeholder="Nom de l'entreprise"
-            class="input"
-            required
-          />
-
-          <textarea
-            v-model="form.company_description"
-            placeholder="Description de l'entreprise (optionnel)"
-            class="input"
-            rows="3"
-          />
-        </div>
-
-        <div
-          v-else
-          class="space-y-4"
-        >
-          <input
-            v-model="form.company_id"
-            type="number"
-            placeholder="ID de l'entreprise"
-            class="input"
-          />
-
-          <p class="text-slate-400 text-xs">
-            Entrez l'ID de l'entreprise fourni par votre PDG.
-          </p>
-        </div>
+        <p class="text-slate-400 text-xs">
+          Sans code, votre espace personnel est créé. Vous pourrez
+          créer ou rejoindre une organisation à tout moment.
+        </p>
 
         <button
           type="submit"
@@ -145,10 +108,7 @@ const form = reactive({
   email: "",
   password: "",
   password_confirmation: "",
-  role: "ceo",
-  company_name: "",
-  company_description: "",
-  company_id: "",
+  invite_code: "",
 });
 
 const register = async () => {
@@ -165,11 +125,6 @@ const register = async () => {
     return;
   }
 
-  if (form.role === "ceo" && !form.company_name.trim()) {
-    error.value = "Le nom de l'entreprise est obligatoire pour un PDG.";
-    return;
-  }
-
   try {
     loading.value = true;
 
@@ -178,14 +133,10 @@ const register = async () => {
       email: form.email,
       password: form.password,
       password_confirmation: form.password_confirmation,
-      role: form.role,
     };
 
-    if (form.role === "ceo") {
-      payload.company_name = form.company_name;
-      payload.company_description = form.company_description;
-    } else {
-      payload.company_id = form.company_id ? Number(form.company_id) : null;
+    if (form.invite_code.trim()) {
+      payload.invite_code = form.invite_code.trim();
     }
 
     await api.post("auth/register/", payload);
@@ -196,9 +147,7 @@ const register = async () => {
     form.email = "";
     form.password = "";
     form.password_confirmation = "";
-    form.company_name = "";
-    form.company_description = "";
-    form.company_id = "";
+    form.invite_code = "";
 
     setTimeout(() => {
       window.location.href = "/login";

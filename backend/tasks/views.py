@@ -30,6 +30,9 @@ from .models import (
 
 from .permissions import (
     is_ceo,
+    is_org_admin,
+    is_company_member,
+    resolve_space,
     get_user_company,
     IsCEOOrAdmin,
     HasCompanyAccess,
@@ -146,6 +149,78 @@ def notify_status_change(task, previous_status, employee):
         )
 
 
+
+
+def _space_queryset(model, request, ordering="-created_at"):
+
+    company, ok = resolve_space(request)
+
+    if not ok:
+
+        return model.objects.none()
+
+    if company is None:
+
+        return model.objects.filter(
+            company__isnull=True,
+            user=request.user
+        ).order_by(ordering)
+
+    return model.objects.filter(
+        company=company
+    ).order_by(ordering)
+
+
+
+def _scoped_tasks(request, include_deleted=False):
+
+    company, ok = resolve_space(request)
+
+    if not ok:
+
+        return Task.objects.none()
+
+    qs = Task.objects.filter(
+        is_deleted=include_deleted
+    )
+
+    if company is None:
+
+        return qs.filter(
+            company__isnull=True,
+            user=request.user
+        )
+
+    qs = qs.filter(company=company)
+
+    if is_org_admin(request.user, company):
+
+        return qs
+
+    return qs.filter(assigned_to=request.user)
+
+
+def _get_accessible_task(request, pk, deleted=False):
+
+    from .permissions import task_is_accessible
+
+    try:
+
+        task = Task.objects.get(
+            id=pk,
+            is_deleted=deleted
+        )
+
+    except Task.DoesNotExist:
+
+        return None
+
+    if task_is_accessible(task, request.user):
+
+        return task
+
+    return None
+
 # ============================================================
 # ENTREPRISES
 # ============================================================
@@ -154,25 +229,263 @@ def notify_status_change(task, previous_status, employee):
 class CompanyViewSet(viewsets.ModelViewSet):
 
     serializer_class = CompanySerializer
-    permission_classes = [IsAuthenticated, IsCEOOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
 
         user = self.request.user
 
-        if is_ceo(user):
-
-            return Company.objects.filter(
-                owner=user
-            )
-
         return Company.objects.filter(
-            employees__user=user
-        )
+            Q(owner=user)
+            | Q(employees__user=user)
+        ).distinct()
 
     def perform_create(self, serializer):
 
-        serializer.save(owner=self.request.user)
+        company = serializer.save(
+            owner=self.request.user
+        )
+
+        profile, _ = UserProfile.objects.get_or_create(
+            user=self.request.user
+        )
+
+        profile.company = company
+        profile.is_admin = True
+        profile.title = (
+            self.request.data.get("title")
+            or "Administrateur"
+        )
+        profile.save(
+            update_fields=[
+                "company",
+                "is_admin",
+                "title",
+            ]
+        )
+
+    def get_object(self):
+
+        obj = super().get_object()
+
+        if not is_company_member(
+            self.request.user, obj
+        ):
+
+            from django.http import Http404
+
+            raise Http404(
+                "Organisation introuvable."
+            )
+
+        return obj
+
+    def update(self, request, *args, **kwargs):
+
+        company = self.get_object()
+
+        if not is_org_admin(
+            request.user, company
+        ):
+
+            return Response(
+                {"error": "Action réservée aux administrateurs."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().update(
+            request, *args, **kwargs
+        )
+
+    def destroy(self, request, *args, **kwargs):
+
+        company = self.get_object()
+
+        if company.owner != request.user:
+
+            return Response(
+                {"error": "Seul le propriétaire peut supprimer l'organisation."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        return super().destroy(
+            request, *args, **kwargs
+        )
+
+    @action(detail=False, methods=["post"])
+    def join(self, request):
+
+        code = request.data.get("invite_code", "").strip()
+
+        if not code:
+
+            return Response(
+                {"error": "Code d'invitation requis."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+
+            company = Company.objects.get(
+                invite_code=code.strip().upper()
+            )
+
+        except Company.DoesNotExist:
+
+            return Response(
+                {"error": "Code d'invitation invalide."},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        profile, _ = UserProfile.objects.get_or_create(
+            user=request.user
+        )
+
+        if profile.company_id == company.id:
+
+            return Response(
+                {"error": "Vous êtes déjà membre."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        profile.company = company
+        profile.is_admin = False
+        profile.title = (
+            request.data.get("title") or "Membre"
+        )
+        profile.save(
+            update_fields=[
+                "company",
+                "is_admin",
+                "title",
+            ]
+        )
+
+        return Response({
+            "message": f"Bienvenue dans {company.name} !",
+            "company": CompanySerializer(company).data,
+        })
+
+    @action(detail=False, methods=["post"])
+    def leave(self, request):
+
+        profile = getattr(request.user, "profile", None)
+
+        if not profile or not profile.company:
+
+            return Response(
+                {"error": "Aucune organisation."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if profile.company.owner == request.user:
+
+            return Response(
+                {"error": "Le propriétaire ne peut pas quitter son organisation."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        profile.company = None
+        profile.is_admin = False
+        profile.title = ""
+        profile.save(
+            update_fields=[
+                "company",
+                "is_admin",
+                "title",
+            ]
+        )
+
+        return Response({
+            "message": "Vous avez quitté l'organisation."
+        })
+
+    @action(
+        detail=True,
+        methods=["post"]
+    )
+    def regenerate_code(self, request, pk=None):
+
+        company = self.get_object()
+
+        if not is_org_admin(request.user, company):
+
+            return Response(
+                {"error": "Action réservée aux administrateurs."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        company.regenerate_invite_code()
+
+        return Response({
+            "invite_code": company.invite_code
+        })
+
+    @action(
+        detail=True,
+        methods=["get", "patch"]
+    )
+    def members(self, request, pk=None):
+
+        company = self.get_object()
+
+        if request.method == "GET":
+
+            members = UserProfile.objects.filter(
+                company=company
+            ).select_related("user")
+
+            return Response([
+                {
+                    "id": m.user.id,
+                    "profile_id": m.id,
+                    "username": m.user.username,
+                    "email": m.user.email,
+                    "title": m.title,
+                    "is_admin": m.is_admin,
+                    "role": m.role,
+                    "is_owner": company.owner_id == m.user.id,
+                }
+                for m in members
+            ])
+
+        if not is_org_admin(request.user, company):
+
+            return Response(
+                {"error": "Action réservée aux administrateurs."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        from django.shortcuts import get_object_or_404
+
+        member = get_object_or_404(
+            UserProfile,
+            id=request.data.get("profile_id"),
+            company=company
+        )
+
+        if member.user_id == company.owner_id:
+
+            return Response(
+                {"error": "Impossible de modifier le propriétaire."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if "title" in request.data:
+
+            member.title = request.data["title"]
+
+        if "is_admin" in request.data:
+
+            member.is_admin = bool(
+                request.data["is_admin"]
+            )
+
+        member.save(update_fields=["title", "is_admin"])
+
+        return Response({
+            "message": "Membre mis à jour."
+        })
 
 
 # ============================================================
@@ -182,22 +495,21 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
 class EmployeeListAPIView(APIView):
 
-    permission_classes = [IsAuthenticated, IsCEOOrAdmin]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
 
-        company = get_user_company(request.user)
+        company, ok = resolve_space(request)
 
-        if not company:
+        if not ok or company is None:
 
             return Response(
-                {"error": "Aucune entreprise associée."},
+                {"error": "Aucune organisation active."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         employees = User.objects.filter(
-            profile__company=company,
-            profile__role=UserRole.EMPLOYEE
+            profile__company=company
         ).select_related("profile")
 
         serializer = UserSerializer(employees, many=True)
@@ -234,19 +546,15 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        company = get_user_company(self.request.user)
-
-        if not company:
-
-            return Project.objects.none()
-
-        return Project.objects.filter(
-            company=company
-        ).order_by("-created_at")
+        return _space_queryset(
+            Project,
+            self.request,
+            "-created_at"
+        )
 
     def perform_create(self, serializer):
 
-        company = get_user_company(self.request.user)
+        company, _ = resolve_space(self.request)
 
         serializer.save(
             user=self.request.user,
@@ -266,19 +574,15 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        company = get_user_company(self.request.user)
-
-        if not company:
-
-            return Category.objects.none()
-
-        return Category.objects.filter(
-            company=company
-        ).order_by("name")
+        return _space_queryset(
+            Category,
+            self.request,
+            "name"
+        )
 
     def perform_create(self, serializer):
 
-        company = get_user_company(self.request.user)
+        company, _ = resolve_space(self.request)
 
         serializer.save(
             user=self.request.user,
@@ -323,19 +627,15 @@ class TagViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
 
-        company = get_user_company(self.request.user)
-
-        if not company:
-
-            return Tag.objects.none()
-
-        return Tag.objects.filter(
-            company=company
-        ).order_by("name")
+        return _space_queryset(
+            Tag,
+            self.request,
+            "name"
+        )
 
     def perform_create(self, serializer):
 
-        company = get_user_company(self.request.user)
+        company, _ = resolve_space(self.request)
 
         serializer.save(
             user=self.request.user,
@@ -357,16 +657,34 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         user = self.request.user
 
-        company = get_user_company(user)
+        company, ok = resolve_space(self.request)
 
-        if not company:
+        if not ok:
 
             return Task.objects.none()
 
-        queryset = Task.objects.filter(
-            company=company,
-            is_deleted=False
-        )
+        if company is None:
+
+            queryset = Task.objects.filter(
+                company__isnull=True,
+                user=user,
+                is_deleted=False
+            )
+
+        elif is_org_admin(user, company):
+
+            queryset = Task.objects.filter(
+                company=company,
+                is_deleted=False
+            )
+
+        else:
+
+            queryset = Task.objects.filter(
+                company=company,
+                assigned_to=user,
+                is_deleted=False
+            )
 
         # Archives
 
@@ -435,14 +753,6 @@ class TaskViewSet(viewsets.ModelViewSet):
                 if task.is_overdue
             ]
 
-        # Si employé : seulement ses tâches
-
-        if not is_ceo(user):
-
-            queryset = queryset.filter(
-                assigned_to=user
-            )
-
         return queryset.order_by(
             "position",
             "-created_at"
@@ -452,21 +762,9 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         obj = super().get_object()
 
-        user = self.request.user
+        from .permissions import task_is_accessible
 
-        company = get_user_company(user)
-
-        if obj.company != company:
-
-            from django.shortcuts import get_object_or_404
-            from django.http import Http404
-
-            raise Http404("Tâche introuvable.")
-
-        if (
-            not is_ceo(user)
-            and not obj.assigned_to.filter(pk=user.pk).exists()
-        ):
+        if not task_is_accessible(obj, self.request.user):
 
             from django.http import Http404
 
@@ -476,27 +774,29 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
 
-        company = get_user_company(request.user)
+        _, ok = resolve_space(request)
 
-        if not company:
+        if not ok:
 
             return Response(
-                {"error": "Aucune entreprise associée."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Espace inaccessible."},
+                status=status.HTTP_403_FORBIDDEN
             )
 
         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
 
-        company = get_user_company(self.request.user)
+        company, _ = resolve_space(self.request)
 
         task = serializer.save(
             user=self.request.user,
             company=company
         )
 
-        notify_task_assigned(task)
+        if company is not None:
+
+            notify_task_assigned(task)
 
     def perform_update(self, serializer):
 
@@ -591,7 +891,7 @@ class TaskViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def archived(self, request):
 
-        company = get_user_company(request.user)
+        company, _ = resolve_space(request)
 
         tasks = Task.objects.filter(
             company=company,
@@ -718,7 +1018,6 @@ class RegisterView(APIView):
         password = request.data.get("password")
         password_confirmation = request.data.get("password_confirmation")
         email = request.data.get("email", "")
-        role = request.data.get("role", UserRole.EMPLOYEE)
         company_name = request.data.get("company_name")
         company_id = request.data.get("company_id")
 
@@ -752,18 +1051,41 @@ class RegisterView(APIView):
         )
 
         company = None
+        is_admin = False
+        title = request.data.get("title", "")
 
-        # Création d'entreprise si PDG
+        # Création d'organisation (optionnel)
 
-        if role == UserRole.CEO and company_name:
+        if company_name:
 
             company = Company.objects.create(
                 name=company_name,
                 description=request.data.get("company_description", ""),
+                kind=request.data.get("company_kind", "organization"),
                 owner=user
             )
 
-        # Rattachement à une entreprise existante
+            is_admin = True
+            title = title or "Administrateur"
+
+        # Rattachement par code d'invitation (optionnel)
+
+        elif request.data.get("invite_code"):
+
+            try:
+
+                company = Company.objects.get(
+                    invite_code=request.data["invite_code"].strip().upper()
+                )
+
+            except Company.DoesNotExist:
+
+                return Response(
+                    {"error": "Code d'invitation invalide."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            title = title or "Membre"
 
         elif company_id:
 
@@ -774,14 +1096,21 @@ class RegisterView(APIView):
             except Company.DoesNotExist:
 
                 return Response(
-                    {"error": "Entreprise introuvable."},
+                    {"error": "Organisation introuvable."},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+
+            title = title or "Membre"
 
         UserProfile.objects.create(
             user=user,
             company=company,
-            role=role
+            role=(
+                UserRole.CEO if is_admin
+                else UserRole.EMPLOYEE
+            ),
+            is_admin=is_admin,
+            title=title or "Membre"
         )
 
         return Response(
@@ -789,11 +1118,68 @@ class RegisterView(APIView):
                 "message": "Compte créé avec succès.",
                 "user_id": user.id,
                 "username": user.username,
-                "role": role,
                 "company_id": company.id if company else None,
             },
             status=status.HTTP_201_CREATED
         )
+
+
+
+
+# ============================================================
+# ESPACES UTILISATEUR (/api/me/)
+# ============================================================
+
+
+class MeAPIView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+
+        user = request.user
+
+        profile = getattr(user, "profile", None)
+
+        spaces = [{
+            "id": "personal",
+            "type": "personal",
+            "name": "Espace personnel",
+            "is_admin": True,
+        }]
+
+        company = profile.company if profile else None
+
+        if company:
+
+            spaces.append({
+                "id": company.id,
+                "type": "organization",
+                "name": company.name,
+                "kind": company.kind,
+                "title": profile.title,
+                "is_admin": is_org_admin(user, company),
+                "invite_code": (
+                    company.invite_code
+                    if is_org_admin(user, company)
+                    else None
+                ),
+            })
+
+        return Response({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "title": profile.title if profile else "",
+            "is_admin": (
+                is_org_admin(user, company)
+                if company else False
+            ),
+            "company_id": company.id if company else None,
+            "spaces": spaces,
+        })
 
 
 # ============================================================
@@ -809,31 +1195,21 @@ class DashboardAPIView(APIView):
 
         user = request.user
 
-        company = get_user_company(user)
+        company, ok = resolve_space(request)
 
-        if not company:
+        if not ok:
 
             return Response(
-                {"error": "Aucune entreprise associée."},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "Espace inaccessible."},
+                status=status.HTTP_403_FORBIDDEN
             )
 
-        is_user_ceo = is_ceo(user)
+        is_user_ceo = (
+            company is None
+            or is_org_admin(user, company)
+        )
 
-        if is_user_ceo:
-
-            base_tasks = Task.objects.filter(
-                company=company,
-                is_deleted=False
-            )
-
-        else:
-
-            base_tasks = Task.objects.filter(
-                company=company,
-                assigned_to=user,
-                is_deleted=False
-            )
+        base_tasks = _scoped_tasks(request)
 
         active_tasks = base_tasks.filter(
             is_archived=False
@@ -874,8 +1250,7 @@ class DashboardAPIView(APIView):
         if is_user_ceo:
 
             employees = User.objects.filter(
-                profile__company=company,
-                profile__role=UserRole.EMPLOYEE
+                profile__company=company
             )
 
             for employee in employees:
@@ -927,7 +1302,12 @@ class DashboardAPIView(APIView):
                 many=True
             ).data,
             "is_ceo": is_user_ceo,
-            "company": CompanySerializer(company).data,
+            "is_admin": is_user_ceo,
+            "space": company.name if company else "personal",
+            "company": (
+                CompanySerializer(company).data
+                if company else None
+            ),
         })
 
 
@@ -944,9 +1324,9 @@ class KanbanAPIView(APIView):
 
         user = request.user
 
-        company = get_user_company(user)
+        _, ok = resolve_space(request)
 
-        if not company:
+        if not ok:
 
             return Response({
                 "todo": [],
@@ -955,22 +1335,9 @@ class KanbanAPIView(APIView):
                 "done": [],
             })
 
-        if is_ceo(user):
-
-            tasks = Task.objects.filter(
-                company=company,
-                is_archived=False,
-                is_deleted=False
-            )
-
-        else:
-
-            tasks = Task.objects.filter(
-                company=company,
-                assigned_to=user,
-                is_archived=False,
-                is_deleted=False
-            )
+        tasks = _scoped_tasks(request).filter(
+            is_archived=False
+        )
 
         tasks = tasks.order_by("position")
 
@@ -1005,33 +1372,13 @@ class MoveTaskAPIView(APIView):
 
     def post(self, request, pk):
 
-        user = request.user
+        task = _get_accessible_task(request, pk)
 
-        company = get_user_company(user)
-
-        try:
-
-            task = Task.objects.get(
-                id=pk,
-                company=company,
-                is_deleted=False
-            )
-
-        except Task.DoesNotExist:
+        if task is None:
 
             return Response(
                 {"error": "Tâche introuvable."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-
-        if (
-            not is_ceo(user)
-            and not task.assigned_to.filter(pk=user.pk).exists()
-        ):
-
-            return Response(
-                {"error": "Accès refusé."},
-                status=status.HTTP_403_FORBIDDEN
             )
 
         new_status = request.data.get("status")
@@ -1094,30 +1441,16 @@ class CalendarAPIView(APIView):
 
         user = request.user
 
-        company = get_user_company(user)
+        _, ok = resolve_space(request)
 
-        if not company:
+        if not ok:
 
             return Response([])
 
-        if is_ceo(user):
-
-            tasks = Task.objects.filter(
-                company=company,
-                is_archived=False,
-                is_deleted=False,
-                due_date__isnull=False
-            )
-
-        else:
-
-            tasks = Task.objects.filter(
-                company=company,
-                assigned_to=user,
-                is_archived=False,
-                is_deleted=False,
-                due_date__isnull=False
-            )
+        tasks = _scoped_tasks(request).filter(
+            is_archived=False,
+            due_date__isnull=False
+        )
 
         tasks = tasks.order_by("due_date")
 
@@ -1156,9 +1489,9 @@ class StatisticsAPIView(APIView):
 
         user = request.user
 
-        company = get_user_company(user)
+        _, ok = resolve_space(request)
 
-        if not company:
+        if not ok:
 
             return Response({
                 "projects": {},
@@ -1168,28 +1501,11 @@ class StatisticsAPIView(APIView):
                 "average_progress": 0,
             })
 
-        if is_ceo(user):
+        tasks = _scoped_tasks(request)
 
-            tasks = Task.objects.filter(
-                company=company,
-                is_deleted=False
-            )
-
-            projects = Project.objects.filter(
-                company=company
-            )
-
-        else:
-
-            tasks = Task.objects.filter(
-                company=company,
-                assigned_to=user,
-                is_deleted=False
-            )
-
-            projects = Project.objects.filter(
-                company=company
-            )
+        projects = _space_queryset(
+            Project, request
+        )
 
         active_tasks = tasks.filter(
             is_archived=False
@@ -1280,30 +1596,9 @@ class TrashAPIView(APIView):
 
     def get(self, request):
 
-        user = request.user
-
-        company = get_user_company(user)
-
-        if not company:
-
-            return Response([])
-
-        if is_ceo(user):
-
-            tasks = Task.objects.filter(
-                company=company,
-                is_deleted=True
-            )
-
-        else:
-
-            tasks = Task.objects.filter(
-                company=company,
-                assigned_to=user,
-                is_deleted=True
-            )
-
-        tasks = tasks.order_by("-deleted_at")
+        tasks = _scoped_tasks(
+            request, include_deleted=True
+        ).order_by("-deleted_at")
 
         serializer = TaskSerializer(tasks, many=True)
 
@@ -1321,33 +1616,15 @@ class RestoreTaskAPIView(APIView):
 
     def post(self, request, pk):
 
-        user = request.user
+        task = _get_accessible_task(
+            request, pk, deleted=True
+        )
 
-        company = get_user_company(user)
-
-        try:
-
-            task = Task.objects.get(
-                id=pk,
-                company=company,
-                is_deleted=True
-            )
-
-        except Task.DoesNotExist:
+        if task is None:
 
             return Response(
                 {"error": "Tâche introuvable dans la corbeille."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-
-        if (
-            not is_ceo(user)
-            and not task.assigned_to.filter(pk=user.pk).exists()
-        ):
-
-            return Response(
-                {"error": "Accès refusé."},
-                status=status.HTTP_403_FORBIDDEN
             )
 
         task.undelete()
@@ -1368,33 +1645,15 @@ class HardDeleteTaskAPIView(APIView):
 
     def delete(self, request, pk):
 
-        user = request.user
+        task = _get_accessible_task(
+            request, pk, deleted=True
+        )
 
-        company = get_user_company(user)
-
-        try:
-
-            task = Task.objects.get(
-                id=pk,
-                company=company,
-                is_deleted=True
-            )
-
-        except Task.DoesNotExist:
+        if task is None:
 
             return Response(
                 {"error": "Tâche introuvable dans la corbeille."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-
-        if (
-            not is_ceo(user)
-            and not task.assigned_to.filter(pk=user.pk).exists()
-        ):
-
-            return Response(
-                {"error": "Accès refusé."},
-                status=status.HTTP_403_FORBIDDEN
             )
 
         task.delete()
@@ -1416,33 +1675,13 @@ class ToggleFavoriteAPIView(APIView):
 
     def post(self, request, pk):
 
-        user = request.user
+        task = _get_accessible_task(request, pk)
 
-        company = get_user_company(user)
-
-        try:
-
-            task = Task.objects.get(
-                id=pk,
-                company=company,
-                is_deleted=False
-            )
-
-        except Task.DoesNotExist:
+        if task is None:
 
             return Response(
                 {"error": "Tâche introuvable."},
                 status=status.HTTP_404_NOT_FOUND
-            )
-
-        if (
-            not is_ceo(user)
-            and not task.assigned_to.filter(pk=user.pk).exists()
-        ):
-
-            return Response(
-                {"error": "Accès refusé."},
-                status=status.HTTP_403_FORBIDDEN
             )
 
         task.is_favorite = not task.is_favorite

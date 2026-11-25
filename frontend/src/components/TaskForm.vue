@@ -57,7 +57,8 @@ const categories = ref([]);
 
 const employees = ref([]);
 
-const isCEO = ref(localStorage.getItem("is_ceo") === "1");
+import { isAdmin, isPersonal } from "../services/space";
+const canAssign = computed(() => isAdmin.value && !isPersonal.value);
 
 
 
@@ -558,7 +559,7 @@ const closeForm = () => {
 
 const loadEmployees = async () => {
 
-    if (!isCEO.value) return;
+    if (!canAssign.value) return;
 
     try {
 
@@ -962,7 +963,7 @@ onMounted(async()=>{
         <!-- ASSIGNATION -->
 
         <div
-            v-if="isCEO"
+            v-if="canAssign"
             class="section"
         >
 

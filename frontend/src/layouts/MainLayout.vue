@@ -64,11 +64,18 @@
 
 <script setup>
 
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 
 import Sidebar from "../components/Sidebar.vue";
 import Starfield from '../components/Starfield.vue';
 import Navbar from "../components/Navbar.vue";
+import { loadSpaces } from "../services/space";
+
+onMounted(() => {
+    if (localStorage.getItem("access")) {
+        loadSpaces().catch(() => {});
+    }
+});
 
 
 const sidebarOpen = ref(false);

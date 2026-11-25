@@ -92,6 +92,26 @@ class Company(models.Model):
 
     )
 
+    kind = models.CharField(
+
+        max_length=50,
+
+        blank=True,
+
+        default="organization"
+
+    )
+
+    invite_code = models.CharField(
+
+        max_length=20,
+
+        unique=True,
+
+        blank=True
+
+    )
+
     owner = models.ForeignKey(
 
         settings.AUTH_USER_MODEL,
@@ -125,6 +145,30 @@ class Company(models.Model):
     def __str__(self):
 
         return self.name
+
+    def save(self, *args, **kwargs):
+
+        if not self.invite_code:
+
+            import secrets
+
+            self.invite_code = (
+                secrets.token_hex(5).upper()
+            )
+
+        super().save(*args, **kwargs)
+
+    def regenerate_invite_code(self):
+
+        import secrets
+
+        self.invite_code = (
+            secrets.token_hex(5).upper()
+        )
+
+        self.save(
+            update_fields=["invite_code"]
+        )
 
 
 # ============================================================
@@ -165,6 +209,22 @@ class UserProfile(models.Model):
         choices=UserRole.choices,
 
         default=UserRole.EMPLOYEE
+
+    )
+
+    title = models.CharField(
+
+        max_length=80,
+
+        blank=True,
+
+        default=""
+
+    )
+
+    is_admin = models.BooleanField(
+
+        default=False
 
     )
 
@@ -518,7 +578,11 @@ class Task(models.Model):
 
         on_delete=models.CASCADE,
 
-        related_name="tasks"
+        related_name="tasks",
+
+        blank=True,
+
+        null=True
 
     )
 

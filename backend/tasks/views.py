@@ -788,6 +788,16 @@ class TaskViewSet(viewsets.ModelViewSet):
                 is_favorite=True
             )
 
+        # Projet
+
+        project = self.request.query_params.get("project")
+
+        if project:
+
+            queryset = queryset.filter(
+                project_id=project
+            )
+
         # Employé assigné
 
         assigned = self.request.query_params.get("assigned")

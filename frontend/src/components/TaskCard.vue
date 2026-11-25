@@ -3,7 +3,7 @@
 import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { formatDuration } from "../services/formatDuration.js";
-import { User, Hourglass, CalendarDays } from "lucide-vue-next";
+import { User, Hourglass, CalendarDays, Folder } from "lucide-vue-next";
 
 const props = defineProps({
   task: {
@@ -74,6 +74,16 @@ const goToDetail = () => {
 
 };
 
+const goToProject = () => {
+
+  if (props.task.project) {
+
+    router.push(`/projects/${props.task.project.id}`);
+
+  }
+
+};
+
 const editTask = () => {
 
   emit("editTask", props.task);
@@ -139,6 +149,26 @@ const deleteTask = () => {
         class="meta-item"
       >
         <CalendarDays :size="13" /> {{ task.due_date }}
+      </span>
+
+      <span
+        v-if="task.project"
+        class="meta-item project-chip"
+        :title="`Projet ${task.project.name} — ${task.project.progress}% terminé`"
+        @click.stop="goToProject"
+      >
+        <Folder :size="13" :color="task.project.color" />
+        {{ task.project.name }}
+        <span class="chip-bar">
+          <span
+            class="chip-bar-fill"
+            :style="{
+              width: task.project.progress + '%',
+              background: task.project.color,
+            }"
+          />
+        </span>
+        <span class="chip-count">{{ task.project.progress }}%</span>
       </span>
 
     </div>
@@ -305,6 +335,52 @@ const deleteTask = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+
+}
+
+
+.project-chip {
+
+  cursor: pointer;
+  border: 1px solid var(--border);
+
+}
+
+.project-chip:hover {
+
+  border-color: var(--accent-border);
+  color: var(--text-h);
+
+}
+
+
+.chip-bar {
+
+  width: 44px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  display: inline-block;
+
+}
+
+
+.chip-bar-fill {
+
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s ease;
+
+}
+
+
+.chip-count {
+
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
 
 }
 
